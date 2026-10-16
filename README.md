@@ -12,18 +12,19 @@ temperatura e chuva, linha do tempo da previsão e previsão detalhada de qualqu
 - **Linha do tempo** com controle deslizante e animação das próximas 72 horas.
 - **Previsão por ponto**: clique no mapa para ver condições atuais, gráfico de 48h e resumo de 7 dias.
 - **Busca de cidades** com autocompletar e navegação por teclado, e botão **minha localização**:
-  o mapa voa até o local, abre a previsão do ponto e carrega a grade da região se preciso.
-- **Carregar esta área**: busca a grade de previsão para a região visível no mapa.
+  o mapa voa até o local e abre a previsão do ponto.
+- **Previsão que acompanha o mapa**: ao mover ou dar zoom, a grade da área visível é carregada
+  automaticamente.
 - Layout responsivo (desktop e celular).
 
 ## Stack
 
-| Camada    | Tecnologia                                       |
-| --------- | ------------------------------------------------ |
-| Framework | Next.js 16 (App Router) + React 19 + TypeScript  |
-| Mapa      | Leaflet + tiles CARTO (dados OpenStreetMap)      |
-| Dados     | [Open-Meteo](https://open-meteo.com) (sem chave) |
-| Qualidade | ESLint, Prettier, Vitest, GitHub Actions         |
+| Camada    | Tecnologia                                         |
+| --------- | -------------------------------------------------- |
+| Framework | Next.js 16 (App Router) + React 19 + TypeScript    |
+| Mapa      | Leaflet + Esri Dark Gray Canvas (sem chave de API) |
+| Dados     | [Open-Meteo](https://open-meteo.com) (sem chave)   |
+| Qualidade | ESLint, Prettier, Vitest, GitHub Actions           |
 
 ## Como rodar
 
@@ -65,7 +66,9 @@ tests/                 Testes unitários
 
 **Fluxo de dados**
 
-1. O cliente chama `/api/grid` com a área visível (`north`, `south`, `west`, `east`, `size`).
+1. Quando o mapa para de se mover, o cliente verifica se os dados carregados cobrem a área
+   visível. Se não, arredonda a área para uma grade fixa (1° a 10°, conforme o zoom), para que
+   vistas próximas peçam exatamente a mesma área e aproveitem o cache, e chama `/api/grid`.
 2. A rota monta uma grade regular de `size × size` pontos (máx. 20 × 20) e faz **uma única**
    requisição multi-local ao Open-Meteo. A resposta fica em cache por 30 minutos.
 3. A direção/velocidade do vento é convertida em componentes `u`/`v`; o cliente monta o JSON no
@@ -109,7 +112,8 @@ cache de 24h.
 - Código: [MIT](LICENSE) © 2026 Henrique Gustavo König.
 - Previsão: [Open-Meteo](https://open-meteo.com), gratuito para **uso não comercial**. Uso comercial
   exige plano pago. Cada ponto da grade conta como uma chamada na cota diária.
-- Mapa base: © OpenStreetMap contributors, © CARTO.
+- Mapa base: © Esri, HERE, Garmin, © OpenStreetMap contributors. O provedor fica em
+  `lib/basemap.ts`.
 
 ## Contribuindo
 

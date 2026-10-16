@@ -5,7 +5,7 @@ import type { BBox, GridForecast } from "@/lib/types";
 
 interface Request {
   id: number;
-  bbox?: BBox;
+  bbox: BBox;
 }
 
 interface Result {
@@ -14,17 +14,19 @@ interface Result {
   error: string | null;
 }
 
+/** Loads the forecast grid for an area; nothing is fetched until `load` is called. */
 export function useGridForecast() {
-  const [request, setRequest] = useState<Request>({ id: 0 });
+  const [request, setRequest] = useState<Request | null>(null);
   const [result, setResult] = useState<Result>({ requestId: -1, data: null, error: null });
 
   useEffect(() => {
+    if (!request) return;
     const controller = new AbortController();
-    const query = request.bbox
-      ? `?${new URLSearchParams(Object.entries(request.bbox).map(([k, v]) => [k, v.toFixed(3)]))}`
-      : "";
+    const query = new URLSearchParams(
+      Object.entries(request.bbox).map(([k, v]) => [k, v.toFixed(3)]),
+    );
 
-    fetch(`/api/grid${query}`, { signal: controller.signal })
+    fetch(`/api/grid?${query}`, { signal: controller.signal })
       .then(async (res) => {
         const json = await res.json();
         if (!res.ok) throw new Error(json.error ?? "Falha ao carregar a previsão");
@@ -40,12 +42,14 @@ export function useGridForecast() {
     return () => controller.abort();
   }, [request]);
 
-  const load = useCallback((bbox?: BBox) => setRequest((r) => ({ id: r.id + 1, bbox })), []);
+  const load = useCallback((bbox: BBox) => setRequest((r) => ({ id: (r?.id ?? 0) + 1, bbox })), []);
 
   return {
     data: result.data,
     error: result.error,
-    loading: result.requestId !== request.id,
+    loading: request !== null && result.requestId !== request.id,
+    /** Area of the latest request, loaded or still in flight. */
+    requestedBBox: request?.bbox ?? null,
     load,
   };
 }

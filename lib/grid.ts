@@ -56,17 +56,40 @@ export function round(value: number, digits = 1): number {
   return Math.round(value * f) / f;
 }
 
-export function bboxContains(bbox: BBox, lat: number, lon: number): boolean {
-  return lat <= bbox.north && lat >= bbox.south && lon >= bbox.west && lon <= bbox.east;
+/** True when `outer` fully contains `inner`. */
+export function bboxCovers(outer: BBox, inner: BBox): boolean {
+  return (
+    inner.north <= outer.north &&
+    inner.south >= outer.south &&
+    inner.west >= outer.west &&
+    inner.east <= outer.east
+  );
 }
 
-/** A square-ish box of `span` degrees centred on a point, clamped to valid coordinates. */
-export function bboxAround(lat: number, lon: number, span = 10): BBox {
-  const half = span / 2;
+function bboxArea(b: BBox): number {
+  return (b.north - b.south) * (b.east - b.west);
+}
+
+/**
+ * Expands a map view outward to a coarse lattice (1°–10° depending on its size) so
+ * nearby views request the exact same area and share the server/CDN cache.
+ */
+export function snapBBox(view: BBox): BBox {
+  const span = Math.max(view.north - view.south, view.east - view.west);
+  const step = span > 60 ? 10 : span > 20 ? 5 : span > 8 ? 2 : 1;
   return {
-    north: Math.min(85, lat + half),
-    south: Math.max(-85, lat - half),
-    west: Math.max(-180, lon - half),
-    east: Math.min(180, lon + half),
+    north: Math.min(85, Math.ceil(view.north / step) * step),
+    south: Math.max(-85, Math.floor(view.south / step) * step),
+    west: Math.max(-180, Math.floor(view.west / step) * step),
+    east: Math.min(180, Math.ceil(view.east / step) * step),
   };
+}
+
+/**
+ * Whether the loaded area should be replaced for the current view: it does not cover
+ * the view, or it is so much larger than the view that the grid looks too coarse.
+ */
+export function needsReload(loaded: BBox | null, view: BBox): boolean {
+  if (!loaded) return true;
+  return !bboxCovers(loaded, view) || bboxArea(loaded) > 12 * bboxArea(view);
 }
