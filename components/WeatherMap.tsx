@@ -6,10 +6,10 @@ import "leaflet-velocity/dist/leaflet-velocity.css";
 import { useEffect, useRef } from "react";
 import type * as Leaflet from "leaflet";
 import { gridStep } from "@/lib/grid";
-import { PRECIPITATION_SCALE, TEMPERATURE_SCALE } from "@/lib/colors";
+import { getLayer } from "@/lib/layers";
 import { renderField } from "@/lib/raster";
 import { toVelocityData } from "@/lib/velocity";
-import type { BBox, FieldLayer, GridForecast } from "@/lib/types";
+import type { BBox, FieldLayer, GridForecast, MapFocus } from "@/lib/types";
 
 /** Overlay pixels per grid cell; higher is smoother but slower. */
 const UPSAMPLE = 12;
@@ -20,6 +20,7 @@ interface Props {
   layer: FieldLayer;
   showWind: boolean;
   selected: { lat: number; lon: number } | null;
+  focus: MapFocus | null;
   onSelect: (point: { lat: number; lon: number }) => void;
   onBoundsChange: (bbox: BBox) => void;
 }
@@ -33,7 +34,7 @@ interface MapHandles {
 }
 
 export default function WeatherMap(props: Props) {
-  const { forecast, step, layer, showWind, selected } = props;
+  const { forecast, step, layer, showWind, selected, focus } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const handlesRef = useRef<MapHandles | null>(null);
   const callbacksRef = useRef(props);
@@ -102,7 +103,7 @@ export default function WeatherMap(props: Props) {
     };
   }, []);
 
-  // Colored scalar field (temperature / precipitation).
+  // Colored scalar field (temperature, rain, clouds…).
   useEffect(() => {
     const draw = () => {
       const h = handlesRef.current;
@@ -112,9 +113,8 @@ export default function WeatherMap(props: Props) {
       if (!forecast || layer === "none") return;
 
       const { nx, ny, bbox } = forecast.grid;
-      const field =
-        layer === "temperature" ? forecast.temperature[step] : forecast.precipitation[step];
-      const scale = layer === "temperature" ? TEMPERATURE_SCALE : PRECIPITATION_SCALE;
+      const { scale } = getLayer(layer);
+      const field = forecast.fields[layer]?.[step];
       if (!field) return;
 
       const width = (nx - 1) * UPSAMPLE + 1;
@@ -208,6 +208,18 @@ export default function WeatherMap(props: Props) {
     window.addEventListener("atmospherix:map-ready", draw);
     return () => window.removeEventListener("atmospherix:map-ready", draw);
   }, [selected]);
+
+  // Fly to a searched place or the user's location.
+  useEffect(() => {
+    const fly = () => {
+      const h = handlesRef.current;
+      if (!h || !focus) return;
+      h.map.flyTo([focus.latitude, focus.longitude], focus.zoom, { duration: 1.2 });
+    };
+    fly();
+    window.addEventListener("atmospherix:map-ready", fly);
+    return () => window.removeEventListener("atmospherix:map-ready", fly);
+  }, [focus]);
 
   return (
     <div ref={containerRef} className="map" role="application" aria-label="Mapa meteorológico" />
