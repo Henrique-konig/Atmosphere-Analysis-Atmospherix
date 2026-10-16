@@ -6,9 +6,11 @@ import type { FieldLayer } from "@/lib/types";
 interface Props {
   layer: FieldLayer;
   showWind: boolean;
+  showRelief: boolean;
   loading: boolean;
   onLayerChange: (layer: FieldLayer) => void;
   onWindChange: (show: boolean) => void;
+  onReliefChange: (show: boolean) => void;
 }
 
 const OPTIONS: { id: FieldLayer; label: string }[] = [
@@ -17,7 +19,8 @@ const OPTIONS: { id: FieldLayer; label: string }[] = [
 ];
 
 export default function LayerControls(props: Props) {
-  const { layer, showWind, loading, onLayerChange, onWindChange } = props;
+  const { layer, showWind, showRelief, loading, onLayerChange, onWindChange, onReliefChange } =
+    props;
   return (
     <div className="panel controls">
       <fieldset>
@@ -42,6 +45,14 @@ export default function LayerControls(props: Props) {
           onChange={(e) => onWindChange(e.target.checked)}
         />
         Partículas de vento
+      </label>
+      <label className="toggle">
+        <input
+          type="checkbox"
+          checked={showRelief}
+          onChange={(e) => onReliefChange(e.target.checked)}
+        />
+        Relevo
       </label>
       <p className="muted small status" role="status">
         {loading ? "Atualizando previsão…" : "A previsão acompanha a área visível"}
