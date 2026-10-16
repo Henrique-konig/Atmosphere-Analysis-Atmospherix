@@ -1,6 +1,7 @@
 import "server-only";
 import { gridPoints, round, windToUV } from "./grid";
-import type { GridForecast, GridSpec, PointForecast } from "./types";
+import { LAYERS } from "./layers";
+import type { FieldId, GridForecast, GridSpec, PointForecast } from "./types";
 
 const BASE_URL = process.env.OPEN_METEO_URL ?? "https://api.open-meteo.com/v1/forecast";
 /** Model runs update every few hours; caching avoids burning the API quota. */
@@ -39,7 +40,7 @@ export async function fetchGridForecast(grid: GridSpec, forecastDays = 3): Promi
   const locations = await request({
     latitude: points.map((p) => p.lat).join(","),
     longitude: points.map((p) => p.lon).join(","),
-    hourly: "temperature_2m,precipitation,wind_speed_10m,wind_direction_10m",
+    hourly: [...LAYERS.map((l) => l.variable), "wind_speed_10m", "wind_direction_10m"].join(","),
     wind_speed_unit: "ms",
     timeformat: "unixtime",
     timezone: "GMT",
@@ -50,31 +51,37 @@ export async function fetchGridForecast(grid: GridSpec, forecastDays = 3): Promi
   }
 
   const times = locations[0].hourly.time;
+  const fields = Object.fromEntries(LAYERS.map((l) => [l.id, [] as number[][]])) as Record<
+    FieldId,
+    number[][]
+  >;
   const forecast: GridForecast = {
     grid,
     times,
-    temperature: [],
-    precipitation: [],
+    fields,
     windU: [],
     windV: [],
     generatedAt: new Date().toISOString(),
   };
 
   for (let t = 0; t < times.length; t++) {
-    const temperature: number[] = [];
-    const precipitation: number[] = [];
+    for (const layer of LAYERS) {
+      fields[layer.id].push(
+        locations.map((loc) => {
+          const raw = loc.hourly[layer.variable]?.[t];
+          if (raw == null) return layer.fallback;
+          return round(layer.convert ? layer.convert(raw) : raw);
+        }),
+      );
+    }
     const windU: number[] = [];
     const windV: number[] = [];
     for (const loc of locations) {
       const h = loc.hourly;
       const { u, v } = windToUV(h.wind_speed_10m[t] ?? 0, h.wind_direction_10m[t] ?? 0);
-      temperature.push(round(h.temperature_2m[t] ?? NaN));
-      precipitation.push(round(h.precipitation[t] ?? 0));
       windU.push(round(u, 2));
       windV.push(round(v, 2));
     }
-    forecast.temperature.push(temperature);
-    forecast.precipitation.push(precipitation);
     forecast.windU.push(windU);
     forecast.windV.push(windV);
   }

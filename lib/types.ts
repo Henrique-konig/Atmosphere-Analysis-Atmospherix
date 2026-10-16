@@ -16,9 +16,8 @@ export interface GridForecast {
   grid: GridSpec;
   /** Unix timestamps (seconds, UTC) for each forecast step. */
   times: number[];
-  /** Per time step, a flat array of nx * ny values. */
-  temperature: number[][];
-  precipitation: number[][];
+  /** Per layer and time step, a flat array of nx * ny values. */
+  fields: Record<FieldId, number[][]>;
   /** Wind components in m/s (u = eastward, v = northward). */
   windU: number[][];
   windV: number[][];
@@ -41,7 +40,9 @@ export interface PointForecast {
   weatherCode: number[];
 }
 
-export type FieldLayer = "temperature" | "precipitation" | "none";
+export type FieldId =
+  "temperature" | "precipitation" | "clouds" | "gusts" | "pressure" | "humidity";
+export type FieldLayer = FieldId | "none";
 
 export interface Place {
   id: number;
