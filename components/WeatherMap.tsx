@@ -5,6 +5,7 @@ import "leaflet-velocity/dist/leaflet-velocity.css";
 
 import { useEffect, useRef } from "react";
 import type * as Leaflet from "leaflet";
+import { BASEMAP } from "@/lib/basemap";
 import { gridStep } from "@/lib/grid";
 import { getLayer } from "@/lib/layers";
 import { renderField } from "@/lib/raster";
@@ -61,20 +62,14 @@ export default function WeatherMap(props: Props) {
         zoomControl: false,
       });
       L.control.zoom({ position: "topright" }).addTo(map);
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_nolabels/{z}/{x}/{y}{r}.png", {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a> | Dados: <a href="https://open-meteo.com/">Open-Meteo</a>',
-        subdomains: "abcd",
-        maxZoom: 12,
+      L.tileLayer(BASEMAP.base, {
+        attribution: BASEMAP.attribution,
+        maxZoom: BASEMAP.maxZoom,
       }).addTo(map);
       map.createPane("labels");
       map.getPane("labels")!.style.zIndex = "450";
       map.getPane("labels")!.style.pointerEvents = "none";
-      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_only_labels/{z}/{x}/{y}{r}.png", {
-        subdomains: "abcd",
-        pane: "labels",
-        maxZoom: 12,
-      }).addTo(map);
+      L.tileLayer(BASEMAP.labels, { pane: "labels", maxZoom: BASEMAP.maxZoom }).addTo(map);
 
       const emitBounds = () => {
         const b = map!.getBounds();
@@ -108,9 +103,17 @@ export default function WeatherMap(props: Props) {
     const draw = () => {
       const h = handlesRef.current;
       if (!h) return;
-      h.overlay?.remove();
-      h.overlay = null;
-      if (!forecast || layer === "none") return;
+      if (!forecast || layer === "none") {
+        h.overlay?.remove();
+        h.overlay = null;
+        return;
+      }
+      // An overlay added or moved mid zoom animation is positioned for the old zoom
+      // level and ends up misplaced, so wait for the animation to finish.
+      if ((h.map as Leaflet.Map & { _animatingZoom?: boolean })._animatingZoom) {
+        h.map.once("zoomend", draw);
+        return;
+      }
 
       const { nx, ny, bbox } = forecast.grid;
       const { scale } = getLayer(layer);
@@ -131,18 +134,30 @@ export default function WeatherMap(props: Props) {
       const { dx, dy } = gridStep(forecast.grid);
       const padX = dx / UPSAMPLE / 2;
       const padY = dy / UPSAMPLE / 2;
-      h.overlay = h.L.imageOverlay(
-        canvas.toDataURL(),
-        [
-          [bbox.south - padY, bbox.west - padX],
-          [bbox.north + padY, bbox.east + padX],
-        ],
-        { opacity: 0.65, className: "field-overlay", interactive: false },
-      ).addTo(h.map);
+      const bounds = h.L.latLngBounds(
+        [bbox.south - padY, bbox.west - padX],
+        [bbox.north + padY, bbox.east + padX],
+      );
+      const url = canvas.toDataURL();
+
+      // Reuse one overlay: swapping the image keeps Leaflet's positioning intact.
+      if (h.overlay) {
+        h.overlay.setUrl(url);
+        if (!h.overlay.getBounds().equals(bounds)) h.overlay.setBounds(bounds);
+      } else {
+        h.overlay = h.L.imageOverlay(url, bounds, {
+          opacity: 0.65,
+          className: "field-overlay",
+          interactive: false,
+        }).addTo(h.map);
+      }
     };
     draw();
     window.addEventListener("atmospherix:map-ready", draw);
-    return () => window.removeEventListener("atmospherix:map-ready", draw);
+    return () => {
+      window.removeEventListener("atmospherix:map-ready", draw);
+      handlesRef.current?.map.off("zoomend", draw);
+    };
   }, [forecast, step, layer]);
 
   // Animated wind particles.
@@ -166,7 +181,7 @@ export default function WeatherMap(props: Props) {
         displayValues: true,
         displayOptions: {
           velocityType: "Vento",
-          position: "bottomleft",
+          position: "topright",
           emptyString: "Sem dados de vento",
           angleConvention: "meteoCW",
           speedUnit: "k/h",

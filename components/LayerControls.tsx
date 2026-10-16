@@ -9,7 +9,6 @@ interface Props {
   loading: boolean;
   onLayerChange: (layer: FieldLayer) => void;
   onWindChange: (show: boolean) => void;
-  onReloadArea: () => void;
 }
 
 const OPTIONS: { id: FieldLayer; label: string }[] = [
@@ -18,7 +17,7 @@ const OPTIONS: { id: FieldLayer; label: string }[] = [
 ];
 
 export default function LayerControls(props: Props) {
-  const { layer, showWind, loading, onLayerChange, onWindChange, onReloadArea } = props;
+  const { layer, showWind, loading, onLayerChange, onWindChange } = props;
   return (
     <div className="panel controls">
       <fieldset>
@@ -44,9 +43,9 @@ export default function LayerControls(props: Props) {
         />
         Partículas de vento
       </label>
-      <button type="button" className="primary" onClick={onReloadArea} disabled={loading}>
-        {loading ? "Carregando…" : "Carregar esta área"}
-      </button>
+      <p className="muted small status" role="status">
+        {loading ? "Atualizando previsão…" : "A previsão acompanha a área visível"}
+      </p>
     </div>
   );
 }
