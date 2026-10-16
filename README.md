@@ -9,6 +9,7 @@ temperatura e chuva, linha do tempo da previsão e previsão detalhada de qualqu
 - **Partículas de vento** animadas (via [`leaflet-velocity`](https://github.com/onaci/leaflet-velocity)).
 - **Camadas coloridas**: temperatura, chuva, nuvens, rajadas, pressão ao nível do mar e umidade,
   com interpolação bilinear e escala de cores com legenda.
+- **Relevo sombreado** misturado às cores do tempo (estilo Windy), que pode ser desligado.
 - **Linha do tempo** com controle deslizante e animação das próximas 72 horas.
 - **Previsão por ponto**: clique no mapa para ver condições atuais, gráfico de 48h e resumo de 7 dias.
 - **Busca de cidades** com autocompletar e navegação por teclado, e botão **minha localização**:

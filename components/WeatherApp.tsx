@@ -27,6 +27,7 @@ export default function WeatherApp() {
   const [pickedStep, setPickedStep] = useState<number | null>(null);
   const [layer, setLayer] = useState<FieldLayer>("temperature");
   const [showWind, setShowWind] = useState(true);
+  const [showRelief, setShowRelief] = useState(true);
   const [selected, setSelected] = useState<{ lat: number; lon: number } | null>(null);
   const [focus, setFocus] = useState<MapFocus | null>(null);
   const [locating, setLocating] = useState(false);
@@ -87,6 +88,7 @@ export default function WeatherApp() {
         step={step}
         layer={layer}
         showWind={showWind}
+        showRelief={showRelief}
         selected={selected}
         focus={focus}
         onSelect={setSelected}
@@ -105,6 +107,8 @@ export default function WeatherApp() {
           loading={loading}
           onLayerChange={setLayer}
           onWindChange={setShowWind}
+          showRelief={showRelief}
+          onReliefChange={setShowRelief}
         />
         {(error || geoError) && (
           <div className="panel error" role="alert">

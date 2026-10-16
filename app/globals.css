@@ -70,6 +70,12 @@ input:focus-visible {
   image-rendering: auto;
 }
 
+/* Hillshade multiplied over the colours: shadows darken, flat areas barely change. */
+.relief-pane {
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+}
+
 .muted {
   color: var(--muted);
   font-size: 0.85rem;

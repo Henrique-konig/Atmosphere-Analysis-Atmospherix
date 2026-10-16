@@ -20,6 +20,7 @@ interface Props {
   step: number;
   layer: FieldLayer;
   showWind: boolean;
+  showRelief: boolean;
   selected: { lat: number; lon: number } | null;
   focus: MapFocus | null;
   onSelect: (point: { lat: number; lon: number }) => void;
@@ -32,10 +33,11 @@ interface MapHandles {
   overlay: Leaflet.ImageOverlay | null;
   wind: (Leaflet.Layer & { setData: (data: unknown) => void }) | null;
   marker: Leaflet.CircleMarker | null;
+  relief: Leaflet.TileLayer;
 }
 
 export default function WeatherMap(props: Props) {
-  const { forecast, step, layer, showWind, selected, focus } = props;
+  const { forecast, step, layer, showWind, showRelief, selected, focus } = props;
   const containerRef = useRef<HTMLDivElement>(null);
   const handlesRef = useRef<MapHandles | null>(null);
   const callbacksRef = useRef(props);
@@ -66,9 +68,17 @@ export default function WeatherMap(props: Props) {
         attribution: BASEMAP.attribution,
         maxZoom: BASEMAP.maxZoom,
       }).addTo(map);
-      map.createPane("labels");
-      map.getPane("labels")!.style.zIndex = "450";
-      map.getPane("labels")!.style.pointerEvents = "none";
+      // Stacking: base map < weather colours (overlayPane, 400) < relief < wind < labels.
+      const pane = (name: string, zIndex: number, className?: string) => {
+        const el = map!.createPane(name);
+        el.style.zIndex = String(zIndex);
+        el.style.pointerEvents = "none";
+        if (className) el.classList.add(className);
+      };
+      pane("relief", 410, "relief-pane");
+      pane("wind", 430);
+      pane("labels", 450);
+      const relief = L.tileLayer(BASEMAP.relief, { pane: "relief", maxZoom: BASEMAP.maxZoom });
       L.tileLayer(BASEMAP.labels, { pane: "labels", maxZoom: BASEMAP.maxZoom }).addTo(map);
 
       const emitBounds = () => {
@@ -86,7 +96,7 @@ export default function WeatherMap(props: Props) {
       );
       emitBounds();
 
-      handlesRef.current = { L, map, overlay: null, wind: null, marker: null };
+      handlesRef.current = { L, map, overlay: null, wind: null, marker: null, relief };
       // Trigger the data effects now that the map exists.
       window.dispatchEvent(new Event("atmospherix:map-ready"));
     })();
@@ -146,7 +156,7 @@ export default function WeatherMap(props: Props) {
         if (!h.overlay.getBounds().equals(bounds)) h.overlay.setBounds(bounds);
       } else {
         h.overlay = h.L.imageOverlay(url, bounds, {
-          opacity: 0.65,
+          opacity: 0.85,
           className: "field-overlay",
           interactive: false,
         }).addTo(h.map);
@@ -178,6 +188,7 @@ export default function WeatherMap(props: Props) {
       const L = h.L as typeof Leaflet & { velocityLayer: (opts: object) => MapHandles["wind"] };
       h.wind = L.velocityLayer({
         data,
+        paneName: "wind",
         displayValues: true,
         displayOptions: {
           velocityType: "Vento",
@@ -202,6 +213,19 @@ export default function WeatherMap(props: Props) {
     window.addEventListener("atmospherix:map-ready", draw);
     return () => window.removeEventListener("atmospherix:map-ready", draw);
   }, [forecast, step, showWind]);
+
+  // Shaded relief over the weather colours.
+  useEffect(() => {
+    const draw = () => {
+      const h = handlesRef.current;
+      if (!h) return;
+      if (showRelief) h.relief.addTo(h.map);
+      else h.relief.remove();
+    };
+    draw();
+    window.addEventListener("atmospherix:map-ready", draw);
+    return () => window.removeEventListener("atmospherix:map-ready", draw);
+  }, [showRelief]);
 
   // Selected point marker.
   useEffect(() => {
