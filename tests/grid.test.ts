@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
+  bboxAround,
+  bboxContains,
   clampGridSize,
   gridPoints,
   gridStep,
@@ -65,5 +67,24 @@ describe("clampGridSize", () => {
     expect(clampGridSize("8")).toBe(8);
     expect(clampGridSize(null)).toBeGreaterThan(1);
     expect(clampGridSize("1")).toBeGreaterThan(1);
+  });
+});
+
+describe("bboxAround / bboxContains", () => {
+  it("builds a box centred on the point", () => {
+    expect(bboxAround(-30, -51, 10)).toEqual({ north: -25, south: -35, west: -56, east: -46 });
+  });
+
+  it("clamps to valid coordinates", () => {
+    const box = bboxAround(84, 178, 10);
+    expect(box.north).toBe(85);
+    expect(box.east).toBe(180);
+  });
+
+  it("detects whether a point is inside", () => {
+    const box = { north: 0, south: -10, west: -60, east: -50 };
+    expect(bboxContains(box, -5, -55)).toBe(true);
+    expect(bboxContains(box, 5, -55)).toBe(false);
+    expect(bboxContains(box, -5, -45)).toBe(false);
   });
 });

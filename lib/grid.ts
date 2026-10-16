@@ -55,3 +55,18 @@ export function round(value: number, digits = 1): number {
   const f = 10 ** digits;
   return Math.round(value * f) / f;
 }
+
+export function bboxContains(bbox: BBox, lat: number, lon: number): boolean {
+  return lat <= bbox.north && lat >= bbox.south && lon >= bbox.west && lon <= bbox.east;
+}
+
+/** A square-ish box of `span` degrees centred on a point, clamped to valid coordinates. */
+export function bboxAround(lat: number, lon: number, span = 10): BBox {
+  const half = span / 2;
+  return {
+    north: Math.min(85, lat + half),
+    south: Math.max(-85, lat - half),
+    west: Math.max(-180, lon - half),
+    east: Math.min(180, lon + half),
+  };
+}
