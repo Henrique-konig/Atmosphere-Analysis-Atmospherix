@@ -6,7 +6,7 @@ import "leaflet-velocity/dist/leaflet-velocity.css";
 import { useEffect, useRef } from "react";
 import type * as Leaflet from "leaflet";
 import { gridStep } from "@/lib/grid";
-import { PRECIPITATION_SCALE, TEMPERATURE_SCALE } from "@/lib/colors";
+import { getLayer } from "@/lib/layers";
 import { renderField } from "@/lib/raster";
 import { toVelocityData } from "@/lib/velocity";
 import type { BBox, FieldLayer, GridForecast, MapFocus } from "@/lib/types";
@@ -103,7 +103,7 @@ export default function WeatherMap(props: Props) {
     };
   }, []);
 
-  // Colored scalar field (temperature / precipitation).
+  // Colored scalar field (temperature, rain, clouds…).
   useEffect(() => {
     const draw = () => {
       const h = handlesRef.current;
@@ -113,9 +113,8 @@ export default function WeatherMap(props: Props) {
       if (!forecast || layer === "none") return;
 
       const { nx, ny, bbox } = forecast.grid;
-      const field =
-        layer === "temperature" ? forecast.temperature[step] : forecast.precipitation[step];
-      const scale = layer === "temperature" ? TEMPERATURE_SCALE : PRECIPITATION_SCALE;
+      const { scale } = getLayer(layer);
+      const field = forecast.fields[layer]?.[step];
       if (!field) return;
 
       const width = (nx - 1) * UPSAMPLE + 1;

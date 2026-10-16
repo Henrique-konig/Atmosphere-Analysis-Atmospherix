@@ -467,3 +467,14 @@ input:focus-visible {
 .search-status {
   padding: 6px 8px;
 }
+
+.layer-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+}
+
+.layer-grid button {
+  padding: 6px 2px;
+  font-size: 0.78rem;
+}

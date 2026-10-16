@@ -1,5 +1,6 @@
 "use client";
 
+import { LAYERS } from "@/lib/layers";
 import type { FieldLayer } from "@/lib/types";
 
 interface Props {
@@ -11,9 +12,8 @@ interface Props {
   onReloadArea: () => void;
 }
 
-const LAYERS: { id: FieldLayer; label: string }[] = [
-  { id: "temperature", label: "Temperatura" },
-  { id: "precipitation", label: "Chuva" },
+const OPTIONS: { id: FieldLayer; label: string }[] = [
+  ...LAYERS.map(({ id, label }) => ({ id, label })),
   { id: "none", label: "Nenhuma" },
 ];
 
@@ -23,8 +23,8 @@ export default function LayerControls(props: Props) {
     <div className="panel controls">
       <fieldset>
         <legend>Camada</legend>
-        <div className="segmented">
-          {LAYERS.map((l) => (
+        <div className="segmented layer-grid">
+          {OPTIONS.map((l) => (
             <button
               key={l.id}
               type="button"
