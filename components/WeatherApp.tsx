@@ -1,16 +1,19 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useGridForecast } from "@/hooks/useGridForecast";
 import { closestStep } from "@/lib/format";
-import { bboxAround, bboxContains } from "@/lib/grid";
+import { needsReload, snapBBox } from "@/lib/grid";
 import type { BBox, FieldLayer, MapFocus, Place } from "@/lib/types";
 import LayerControls from "./LayerControls";
 import Legend from "./Legend";
 import PlaceSearch from "./PlaceSearch";
 import PointPanel from "./PointPanel";
 import Timeline from "./Timeline";
+
+/** Wait for the map to settle before fetching, so panning doesn't spam the API. */
+const RELOAD_DELAY_MS = 500;
 
 // Leaflet touches `window` on import, so the map only renders on the client.
 const WeatherMap = dynamic(() => import("./WeatherMap"), {
@@ -19,7 +22,7 @@ const WeatherMap = dynamic(() => import("./WeatherMap"), {
 });
 
 export default function WeatherApp() {
-  const { data, error, loading, load } = useGridForecast();
+  const { data, error, loading, requestedBBox, load } = useGridForecast();
   // null = follow the forecast hour closest to now.
   const [pickedStep, setPickedStep] = useState<number | null>(null);
   const [layer, setLayer] = useState<FieldLayer>("temperature");
@@ -28,32 +31,29 @@ export default function WeatherApp() {
   const [focus, setFocus] = useState<MapFocus | null>(null);
   const [locating, setLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const boundsRef = useRef<BBox | null>(null);
+  const reloadTimer = useRef<number | undefined>(undefined);
 
   const step = pickedStep ?? (data ? closestStep(data.times) : 0);
 
-  const handleBounds = useCallback((bbox: BBox) => {
-    boundsRef.current = bbox;
-  }, []);
-  const reloadArea = useCallback(() => {
-    if (!boundsRef.current) return;
-    setPickedStep(null);
-    load(boundsRef.current);
-  }, [load]);
-
-  /** Centres the map on a point, opens its forecast and loads data around it if needed. */
-  const goTo = useCallback(
-    (latitude: number, longitude: number) => {
-      setFocus((f) => ({ id: (f?.id ?? 0) + 1, latitude, longitude, zoom: 8 }));
-      setSelected({ lat: latitude, lon: longitude });
-      setGeoError(null);
-      if (!data || !bboxContains(data.grid.bbox, latitude, longitude)) {
-        setPickedStep(null);
-        load(bboxAround(latitude, longitude));
-      }
+  // Load the visible area once the map settles, unless the current data already covers it.
+  const handleBounds = useCallback(
+    (view: BBox) => {
+      window.clearTimeout(reloadTimer.current);
+      reloadTimer.current = window.setTimeout(() => {
+        if (needsReload(requestedBBox, view)) load(snapBBox(view));
+      }, RELOAD_DELAY_MS);
     },
-    [data, load],
+    [requestedBBox, load],
   );
+  useEffect(() => () => window.clearTimeout(reloadTimer.current), []);
+
+  /** Centres the map on a point and opens its forecast. */
+  const goTo = useCallback((latitude: number, longitude: number) => {
+    setFocus((f) => ({ id: (f?.id ?? 0) + 1, latitude, longitude, zoom: 8 }));
+    setSelected({ lat: latitude, lon: longitude });
+    setGeoError(null);
+    // The flight ends with a map move, which loads the new area if needed.
+  }, []);
 
   const selectPlace = useCallback((place: Place) => goTo(place.latitude, place.longitude), [goTo]);
 
@@ -105,7 +105,6 @@ export default function WeatherApp() {
           loading={loading}
           onLayerChange={setLayer}
           onWindChange={setShowWind}
-          onReloadArea={reloadArea}
         />
         {(error || geoError) && (
           <div className="panel error" role="alert">

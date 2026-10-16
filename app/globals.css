@@ -164,20 +164,6 @@ input:focus-visible {
   font-size: 0.9rem;
 }
 
-.primary {
-  border: 0;
-  border-radius: 8px;
-  padding: 8px;
-  background: rgba(77, 163, 255, 0.18);
-  color: var(--accent);
-  font-weight: 600;
-}
-
-.primary:disabled {
-  opacity: 0.6;
-  cursor: progress;
-}
-
 .icon-button {
   border: 0;
   background: rgba(255, 255, 255, 0.08);
