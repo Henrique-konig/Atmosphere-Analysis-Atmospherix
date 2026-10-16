@@ -106,6 +106,7 @@ cache de 24h.
 
 ## Dados e licenças
 
+- Código: [MIT](LICENSE) © 2026 Henrique Gustavo König.
 - Previsão: [Open-Meteo](https://open-meteo.com), gratuito para **uso não comercial**. Uso comercial
   exige plano pago. Cada ponto da grade conta como uma chamada na cota diária.
 - Mapa base: © OpenStreetMap contributors, © CARTO.
