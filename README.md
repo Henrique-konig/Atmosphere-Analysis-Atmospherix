@@ -10,6 +10,8 @@ temperatura e chuva, linha do tempo da previsão e previsão detalhada de qualqu
 - **Camadas de temperatura e chuva**, com interpolação bilinear e escala de cores com legenda.
 - **Linha do tempo** com controle deslizante e animação das próximas 72 horas.
 - **Previsão por ponto**: clique no mapa para ver condições atuais, gráfico de 48h e resumo de 7 dias.
+- **Busca de cidades** com autocompletar e navegação por teclado, e botão **minha localização**:
+  o mapa voa até o local, abre a previsão do ponto e carrega a grade da região se preciso.
 - **Carregar esta área**: busca a grade de previsão para a região visível no mapa.
 - Layout responsivo (desktop e celular).
 
@@ -52,6 +54,7 @@ Abra <http://localhost:3000>. Nenhuma variável de ambiente é obrigatória; vej
 app/
   api/grid/route.ts    GET /api/grid   → grade de previsão (temperatura, chuva, vento u/v)
   api/point/route.ts   GET /api/point  → previsão horária de 7 dias de um ponto
+  api/geocode/route.ts GET /api/geocode → busca de cidades
   layout.tsx, page.tsx
 components/            UI (mapa, controles, linha do tempo, painel do ponto)
 hooks/                 Busca de dados no cliente
@@ -85,12 +88,16 @@ de noroeste para sudeste.
 Previsão horária de 7 dias de um ponto (temperatura, sensação, chuva, probabilidade, vento,
 rajadas, direção e código de tempo WMO).
 
+`GET /api/geocode?q=porto alegre`
+
+Até 6 locais (nome, estado, país e coordenadas), via API de geocodificação do Open-Meteo, com
+cache de 24h.
+
 ## Roadmap
 
 - [ ] Dados próprios a partir do GFS (NOAA) em GRIB2, processados por um job agendado
 - [ ] Partículas de vento em WebGL (técnica do `webgl-wind`) para grades globais
 - [ ] Mais camadas: nuvens, pressão, rajadas, umidade
-- [ ] Busca de cidades e geolocalização
 - [ ] Testes end-to-end com Playwright
 
 ## Dados e licenças

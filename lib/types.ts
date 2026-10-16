@@ -42,3 +42,22 @@ export interface PointForecast {
 }
 
 export type FieldLayer = "temperature" | "precipitation" | "none";
+
+export interface Place {
+  id: number;
+  name: string;
+  /** State / province, when known. */
+  region?: string;
+  country?: string;
+  countryCode?: string;
+  latitude: number;
+  longitude: number;
+}
+
+/** A point the map should fly to; `id` changes on every request. */
+export interface MapFocus {
+  id: number;
+  latitude: number;
+  longitude: number;
+  zoom: number;
+}
