@@ -1,22 +1,23 @@
 # Atmospherix
 
-Mapa meteorológico interativo em Next.js, inspirado no [Windy](https://www.windy.com) e no
-[Ventusky](https://www.ventusky.com): partículas de vento animadas, camadas coloridas de
-temperatura e chuva, linha do tempo da previsão e previsão detalhada de qualquer ponto do mapa.
+Previsão do tempo detalhada e elegante, inspirada no app Tempo do iPhone. Abre direto na sua
+localização (ou na cidade que você escolher) e mostra tudo o que importa numa tela só, no celular
+ou no computador.
 
 ## Funcionalidades
 
-- **Partículas de vento** animadas (via [`leaflet-velocity`](https://github.com/onaci/leaflet-velocity)).
-- **Camadas coloridas**: temperatura, chuva, nuvens, rajadas, pressão ao nível do mar e umidade,
-  com interpolação bilinear e escala de cores com legenda.
-- **Relevo sombreado** misturado às cores do tempo (estilo Windy), que pode ser desligado.
-- **Linha do tempo** com controle deslizante e animação das próximas 72 horas.
-- **Previsão por ponto**: clique no mapa para ver condições atuais, gráfico de 48h e resumo de 7 dias.
-- **Busca de cidades** com autocompletar e navegação por teclado, e botão **minha localização**:
-  o mapa voa até o local e abre a previsão do ponto.
-- **Previsão que acompanha o mapa**: ao mover ou dar zoom, a grade da área visível é carregada
-  automaticamente.
-- Layout responsivo (desktop e celular).
+- **Agora**: temperatura, condição, máxima e mínima do dia, com o fundo mudando conforme o tempo e a
+  hora (dia, noite, nublado, chuva, tempestade, neblina).
+- **Riscos nas próximas 48 horas**: tempestades, chuva forte, ventos fortes, calor, frio e geada,
+  índice UV muito alto e neblina, estimados a partir da previsão.
+- **Previsão por hora** (24 h) com nascer e pôr do sol, e **previsão para 10 dias** com barras de
+  temperatura coloridas.
+- **Mapa de precipitação** da região com a chuva das próximas 12 horas, animado.
+- **Detalhes**: índice UV, nascer/pôr do sol com a trajetória do sol, vento com bússola, precipitação,
+  sensação térmica, umidade e ponto de orvalho, visibilidade, pressão com tendência, fase da lua
+  (com iluminação e próxima lua cheia) e comparação com a **média histórica** de temperatura.
+- **Cidades**: busca com autocompletar, "usar minha localização" e lista de cidades salvas no
+  aparelho.
 
 ## Stack
 
@@ -25,6 +26,7 @@ temperatura e chuva, linha do tempo da previsão e previsão detalhada de qualqu
 | Framework | Next.js 16 (App Router) + React 19 + TypeScript    |
 | Mapa      | Leaflet + Esri Dark Gray Canvas (sem chave de API) |
 | Dados     | [Open-Meteo](https://open-meteo.com) (sem chave)   |
+| Ícones    | Lucide                                             |
 | Qualidade | ESLint, Prettier, Vitest, GitHub Actions           |
 
 ## Como rodar
@@ -55,64 +57,40 @@ Abra <http://localhost:3000>. Nenhuma variável de ambiente é obrigatória; vej
 
 ```
 app/
-  api/grid/route.ts    GET /api/grid   → grade de previsão (temperatura, chuva, vento u/v)
-  api/point/route.ts   GET /api/point  → previsão horária de 7 dias de um ponto
-  api/geocode/route.ts GET /api/geocode → busca de cidades
+  api/forecast/route.ts  GET /api/forecast → previsão completa + média histórica
+  api/rain/route.ts      GET /api/rain     → grade de chuva da região (mapa)
+  api/geocode/route.ts   GET /api/geocode  → busca de cidades
   layout.tsx, page.tsx
-components/            UI (mapa, controles, linha do tempo, painel do ponto)
-hooks/                 Busca de dados no cliente
-lib/                   Lógica pura: grade, cores, rasterização, cliente Open-Meteo
-tests/                 Testes unitários
+components/              Tela, cartões, blocos de detalhe (tiles/), mapa e seletor de cidades
+hooks/                   Busca de dados no cliente
+lib/                     Lógica pura: cliente Open-Meteo, riscos, lua, médias, condições, formatação
+tests/                   Testes unitários
 ```
 
-**Fluxo de dados**
-
-1. Quando o mapa para de se mover, o cliente verifica se os dados carregados cobrem a área
-   visível. Se não, arredonda a área para uma grade fixa (1° a 10°, conforme o zoom), para que
-   vistas próximas peçam exatamente a mesma área e aproveitem o cache, e chama `/api/grid`.
-2. A rota monta uma grade regular de `size × size` pontos (máx. 20 × 20) e faz **uma única**
-   requisição multi-local ao Open-Meteo. A resposta fica em cache por 30 minutos.
-3. A direção/velocidade do vento é convertida em componentes `u`/`v`; o cliente monta o JSON no
-   formato GRIB que o `leaflet-velocity` espera.
-4. Cada camada é definida uma vez em `lib/layers.ts` (variável do Open-Meteo, unidade, escala de
-   cores e marcas da legenda); para adicionar uma camada nova basta incluir uma entrada ali.
-5. Os campos escalares são rasterizados num `<canvas>` com interpolação bilinear e sobrepostos ao
-   mapa como imagem.
-
-O mapa é um client component carregado com `dynamic(..., { ssr: false })`, pois o Leaflet depende
-de `window`.
-
-### API
-
-`GET /api/grid?north=-22&south=-34&west=-58&east=-47&size=14`
-
-Sem parâmetros, usa a região Sul do Brasil. Resposta: `{ grid, times, fields, windU, windV,
-generatedAt }`, onde `fields` traz `temperature`, `precipitation`, `clouds`, `gusts`, `pressure` e
-`humidity`. Cada campo é um array por hora com `nx × ny` valores ordenados de noroeste para
-sudeste.
-
-`GET /api/point?lat=-30.03&lon=-51.23`
-
-Previsão horária de 7 dias de um ponto (temperatura, sensação, chuva, probabilidade, vento,
-rajadas, direção e código de tempo WMO).
-
-`GET /api/geocode?q=porto alegre`
-
-Até 6 locais (nome, estado, país e coordenadas), via API de geocodificação do Open-Meteo, com
-cache de 24h.
+- `/api/forecast?lat=&lon=` faz duas chamadas em paralelo ao Open-Meteo: a previsão (atual, 48 h
+  por hora e 10 dias) e o arquivo histórico dos últimos 10 anos, de onde sai a média para a data de
+  hoje. Se a média falhar, a previsão é entregue sem ela.
+- Os riscos (`lib/risks.ts`), a fase da lua (`lib/moon.ts`) e os textos dos blocos
+  (`lib/conditions.ts`) são calculados no cliente, a partir da previsão.
+- Os horários são mostrados no fuso da cidade (`timezone` do Open-Meteo), não no do aparelho.
+- A localização usa a API de geolocalização do navegador; o nome da cidade vem da geocodificação
+  reversa gratuita da BigDataCloud. Cidades salvas ficam no `localStorage`.
+- O mapa usa Leaflet com o mapa base escuro da Esri; a chuva é uma grade de 16 × 16 pontos ao redor
+  da cidade, interpolada num `<canvas>`.
 
 ## Roadmap
 
-- [ ] Dados próprios a partir do GFS (NOAA) em GRIB2, processados por um job agendado
-- [ ] Partículas de vento em WebGL (técnica do `webgl-wind`) para grades globais
-- [ ] Isóbaras (linhas de pressão) sobre a camada de pressão
-- [ ] Testes end-to-end com Playwright
+- [ ] Radar meteorológico observado no mapa (RainViewer)
+- [ ] Alertas oficiais da Defesa Civil / INMET
+- [ ] Qualidade do ar e pólen
+- [ ] Instalar como app (PWA) e notificações de chuva
 
 ## Dados e licenças
 
 - Código: [MIT](LICENSE) © 2026 Henrique Gustavo König.
 - Previsão: [Open-Meteo](https://open-meteo.com), gratuito para **uso não comercial**. Uso comercial
   exige plano pago. Cada ponto da grade conta como uma chamada na cota diária.
+- Nomes de cidades pela localização: BigDataCloud (gratuito, sem chave).
 - Mapa base: © Esri, HERE, Garmin, © OpenStreetMap contributors. O provedor fica em
   `lib/basemap.ts`.
 

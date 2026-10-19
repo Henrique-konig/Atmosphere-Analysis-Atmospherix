@@ -1,5 +1,5 @@
-import WeatherApp from "@/components/WeatherApp";
+import ClientApp from "@/components/ClientApp";
 
 export default function Home() {
-  return <WeatherApp />;
+  return <ClientApp />;
 }

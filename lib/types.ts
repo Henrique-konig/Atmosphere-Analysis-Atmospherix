@@ -12,37 +12,89 @@ export interface GridSpec {
   ny: number;
 }
 
-export interface GridForecast {
+/** Hourly precipitation (mm/h) over a grid, used by the rain map. */
+export interface PrecipitationGrid {
   grid: GridSpec;
   /** Unix timestamps (seconds, UTC) for each forecast step. */
   times: number[];
-  /** Per layer and time step, a flat array of nx * ny values. */
-  fields: Record<FieldId, number[][]>;
-  /** Wind components in m/s (u = eastward, v = northward). */
-  windU: number[][];
-  windV: number[][];
-  generatedAt: string;
+  /** Per time step, a flat array of nx * ny values. */
+  precipitation: number[][];
 }
 
-export interface PointForecast {
+export interface CurrentConditions {
+  time: number;
+  temperature: number;
+  apparentTemperature: number;
+  humidity: number;
+  dewPoint: number;
+  precipitation: number;
+  weatherCode: number;
+  isDay: boolean;
+  cloudCover: number;
+  pressure: number;
+  windSpeed: number;
+  windDirection: number;
+  windGusts: number;
+  visibility: number;
+  uvIndex: number;
+}
+
+export interface HourlyForecast {
+  time: number[];
+  temperature: number[];
+  apparentTemperature: number[];
+  humidity: number[];
+  dewPoint: number[];
+  precipitationProbability: number[];
+  precipitation: number[];
+  weatherCode: number[];
+  pressure: number[];
+  visibility: number[];
+  windSpeed: number[];
+  windDirection: number[];
+  windGusts: number[];
+  uvIndex: number[];
+  isDay: boolean[];
+}
+
+export interface DailyForecast {
+  time: number[];
+  weatherCode: number[];
+  temperatureMax: number[];
+  temperatureMin: number[];
+  sunrise: number[];
+  sunset: number[];
+  daylightDuration: number[];
+  uvIndexMax: number[];
+  precipitationSum: number[];
+  precipitationProbabilityMax: number[];
+  windSpeedMax: number[];
+  windGustsMax: number[];
+  windDirectionDominant: number[];
+}
+
+export interface Forecast {
   latitude: number;
   longitude: number;
   elevation: number;
+  /** IANA time zone of the location, used to show local times. */
   timezone: string;
-  times: number[];
-  temperature: number[];
-  apparentTemperature: number[];
-  precipitation: number[];
-  precipitationProbability: number[];
-  windSpeed: number[];
-  windGusts: number[];
-  windDirection: number[];
-  weatherCode: number[];
+  current: CurrentConditions;
+  hourly: HourlyForecast;
+  daily: DailyForecast;
 }
 
-export type FieldId =
-  "temperature" | "precipitation" | "clouds" | "gusts" | "pressure" | "humidity";
-export type FieldLayer = FieldId | "none";
+/** Typical temperatures for today's date, from past years. */
+export interface TemperatureAverages {
+  years: number;
+  max: number;
+  min: number;
+}
+
+export interface ForecastResponse {
+  forecast: Forecast;
+  averages: TemperatureAverages | null;
+}
 
 export interface Place {
   id: number;
@@ -53,12 +105,4 @@ export interface Place {
   countryCode?: string;
   latitude: number;
   longitude: number;
-}
-
-/** A point the map should fly to; `id` changes on every request. */
-export interface MapFocus {
-  id: number;
-  latitude: number;
-  longitude: number;
-  zoom: number;
 }
