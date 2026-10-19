@@ -1,28 +1,52 @@
-const timeFormatter = new Intl.DateTimeFormat("pt-BR", {
-  weekday: "short",
-  day: "2-digit",
-  month: "2-digit",
-  hour: "2-digit",
-  minute: "2-digit",
-});
+const cache = new Map<string, Intl.DateTimeFormat>();
 
-const hourFormatter = new Intl.DateTimeFormat("pt-BR", { hour: "2-digit", minute: "2-digit" });
-const dayFormatter = new Intl.DateTimeFormat("pt-BR", { weekday: "short", day: "2-digit" });
+/** Intl formatters are costly to create; reuse one per time zone and pattern. */
+function formatter(timeZone: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = timeZone + JSON.stringify(options);
+  let f = cache.get(key);
+  if (!f) {
+    f = new Intl.DateTimeFormat("pt-BR", { timeZone, ...options });
+    cache.set(key, f);
+  }
+  return f;
+}
 
-export const formatDateTime = (unix: number) => timeFormatter.format(unix * 1000);
-export const formatHour = (unix: number) => hourFormatter.format(unix * 1000);
-export const formatDay = (unix: number) => dayFormatter.format(unix * 1000);
+/** "14h" in the location's time zone. */
+export function formatHour(unix: number, timeZone: string): string {
+  return `${formatter(timeZone, { hour: "2-digit", hourCycle: "h23" }).format(unix * 1000)}h`;
+}
+
+/** "06:12" in the location's time zone. */
+export function formatTime(unix: number, timeZone: string): string {
+  return formatter(timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
+    unix * 1000,
+  );
+}
+
+/** "Seg", "Ter"… */
+export function formatWeekday(unix: number, timeZone: string): string {
+  const day = formatter(timeZone, { weekday: "short" })
+    .format(unix * 1000)
+    .replace(".", "");
+  return day.charAt(0).toUpperCase() + day.slice(1);
+}
+
+/** "segunda-feira, 19 de outubro" */
+export function formatLongDate(unix: number, timeZone: string): string {
+  return formatter(timeZone, { weekday: "long", day: "numeric", month: "long" }).format(
+    unix * 1000,
+  );
+}
+
+export function formatDuration(seconds: number): string {
+  const h = Math.floor(seconds / 3600);
+  const m = Math.round((seconds % 3600) / 60);
+  return `${h}h ${String(m).padStart(2, "0")}min`;
+}
 
 const COMPASS = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
 export function compassPoint(deg: number): string {
   return COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 }
 
-/** Index of the forecast step closest to now. */
-export function closestStep(times: number[], now = Date.now() / 1000): number {
-  let best = 0;
-  for (let i = 1; i < times.length; i++) {
-    if (Math.abs(times[i] - now) < Math.abs(times[best] - now)) best = i;
-  }
-  return best;
-}
+export const formatTemp = (t: number) => `${Math.round(t)}°`;
