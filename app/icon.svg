@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1e64c8"/>
+      <stop offset="0.55" stop-color="#4a94e6"/>
+      <stop offset="1" stop-color="#7db7f0"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.55" stop-color="#ffd60a" stop-opacity="0.45"/>
+      <stop offset="1" stop-color="#ffd60a" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="cloud" gradientUnits="userSpaceOnUse" x1="0" y1="204" x2="0" y2="372">
+      <stop offset="0" stop-color="#ffffff"/>
+      <stop offset="1" stop-color="#dbe7f5"/>
+    </linearGradient>
+    <clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+    <rect width="512" height="512" fill="url(#sky)"/>
+    <circle cx="300" cy="206" r="130" fill="url(#glow)"/>
+    <circle cx="300" cy="206" r="78" fill="#ffd60a"/>
+    <g fill="url(#cloud)">
+      <circle cx="196" cy="316" r="54"/>
+      <circle cx="270" cy="282" r="78"/>
+      <circle cx="340" cy="322" r="48"/>
+      <rect x="196" y="300" width="144" height="70"/>
+    </g>
+  </g>
+</svg>
