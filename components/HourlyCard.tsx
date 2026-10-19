@@ -3,6 +3,7 @@ import { describeWeather } from "@/lib/conditions";
 import { formatHour, formatTemp, formatTime, present } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
+import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
 const HOURS = 24;
@@ -38,7 +39,7 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
   return (
     <Card title="Previsão por hora" icon={Clock} className="hourly">
       <p className="card-summary">{summary}</p>
-      <ol className="hourly-strip" tabIndex={0} aria-label="Próximas 24 horas">
+      <ScrollStrip className="hourly-strip" label="Próximas 24 horas">
         {items.map((item) =>
           item.kind === "hour" ? (
             <li key={`h${item.time}`}>
@@ -78,7 +79,7 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
             </li>
           ),
         )}
-      </ol>
+      </ScrollStrip>
     </Card>
   );
 }

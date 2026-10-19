@@ -30,6 +30,7 @@ import {
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import DayChart from "./DayChart";
+import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
 interface Props {
@@ -51,7 +52,6 @@ const fromTo = (lo: number, hi: number, unit: string) =>
 export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const stripRef = useRef<HTMLOListElement>(null);
-  const hoursRef = useRef<HTMLOListElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
   const open = day !== null;
   const { daily, dayHours, timezone, current } = forecast;
@@ -69,10 +69,6 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
     stripRef.current
       ?.querySelector<HTMLElement>(`[data-day="${day}"]`)
       ?.scrollIntoView({ block: "nearest", inline: "center" });
-    // Today starts at the current hour; other days at midnight.
-    const hours = hoursRef.current;
-    const next = hours?.querySelector<HTMLElement>("li:not(.past)");
-    if (hours && next) hours.scrollLeft = next.offsetLeft - hours.offsetLeft - 12;
   }, [day]);
 
   const d = day === null ? null : dayDetails(forecast, day);
@@ -163,11 +159,11 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
             {d.hours.length === 0 ? (
               <p className="card-note">Sem previsão por hora para este dia.</p>
             ) : (
-              <ol
-                ref={hoursRef}
+              <ScrollStrip
                 className="hourly-strip"
-                tabIndex={0}
-                aria-label="Previsão hora a hora"
+                label="Previsão hora a hora"
+                startSelector="li:not(.past)"
+                resetKey={day}
               >
                 {d.hours.map((i) => {
                   const time = dayHours.time[i];
@@ -191,7 +187,7 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                     </li>
                   );
                 })}
-              </ol>
+              </ScrollStrip>
             )}
           </Card>
 

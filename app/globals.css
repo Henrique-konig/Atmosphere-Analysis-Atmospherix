@@ -385,6 +385,57 @@ a {
   margin-top: 2px;
 }
 
+/* Scrollable strips: arrows in the card corner and a thin scrollbar for mouse users. */
+.card:has(.strip) {
+  position: relative;
+}
+
+.strip-arrow {
+  position: absolute;
+  top: 8px;
+  display: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+}
+
+.strip-arrow-left {
+  right: 48px;
+}
+
+.strip-arrow-right,
+.strip-arrow-left:last-child {
+  right: 14px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .strip-arrow {
+    display: grid;
+  }
+
+  .strip-arrow:hover {
+    background: rgba(255, 255, 255, 0.3);
+  }
+
+  .hourly-strip {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+    padding-bottom: 8px;
+  }
+
+  .hourly-strip::-webkit-scrollbar {
+    display: block;
+    height: 6px;
+  }
+
+  .hourly-strip::-webkit-scrollbar-thumb {
+    border-radius: 3px;
+    background: rgba(255, 255, 255, 0.35);
+  }
+}
+
 /* Hourly strip */
 .hourly-strip {
   display: flex;
@@ -394,6 +445,7 @@ a {
   scrollbar-width: none;
   margin: 0 -16px;
   padding: 0 12px;
+  scroll-padding-inline: 12px;
 }
 
 .hourly-strip::-webkit-scrollbar {
