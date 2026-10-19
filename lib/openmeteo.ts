@@ -32,7 +32,7 @@ interface OpenMeteoLocation {
   longitude: number;
   elevation: number;
   timezone: string;
-  current?: Record<string, number>;
+  current?: Record<string, number | null> & { time: number };
   hourly?: Series & { time: number[] };
   daily?: Series & { time: number[] };
 }
@@ -101,9 +101,9 @@ const CURRENT_VARS = [
   "wind_gusts_10m",
 ];
 
-/** Missing values (null) become 0 so the UI never has to special-case them. */
-function column(series: Series, name: string, from = 0, to?: number): number[] {
-  return (series[name] ?? []).slice(from, to).map((v) => v ?? 0);
+/** Missing values stay null: the UI shows them as unavailable instead of a fake 0. */
+function column(series: Series, name: string, from = 0, to?: number): (number | null)[] {
+  return (series[name] ?? []).slice(from, to).map((v) => v ?? null);
 }
 
 /** Index of the hour that contains `now` (the last step not after it). */
@@ -151,21 +151,21 @@ export async function fetchForecast(lat: number, lon: number): Promise<Forecast>
 
   const current: CurrentConditions = {
     time: c.time,
-    temperature: c.temperature_2m,
-    apparentTemperature: c.apparent_temperature,
-    humidity: c.relative_humidity_2m,
-    precipitation: c.precipitation,
-    weatherCode: c.weather_code,
+    temperature: c.temperature_2m ?? null,
+    apparentTemperature: c.apparent_temperature ?? null,
+    humidity: c.relative_humidity_2m ?? null,
+    precipitation: c.precipitation ?? null,
+    weatherCode: c.weather_code ?? null,
     isDay: Boolean(c.is_day),
-    cloudCover: c.cloud_cover,
-    pressure: c.pressure_msl,
-    windSpeed: c.wind_speed_10m,
-    windDirection: c.wind_direction_10m,
-    windGusts: c.wind_gusts_10m,
+    cloudCover: c.cloud_cover ?? null,
+    pressure: c.pressure_msl ?? null,
+    windSpeed: c.wind_speed_10m ?? null,
+    windDirection: c.wind_direction_10m ?? null,
+    windGusts: c.wind_gusts_10m ?? null,
     // Not part of the "current" block: take them from the current hour.
-    dewPoint: hourly.dewPoint[0] ?? 0,
-    visibility: hourly.visibility[0] ?? 0,
-    uvIndex: hourly.uvIndex[0] ?? 0,
+    dewPoint: hourly.dewPoint[0] ?? null,
+    visibility: hourly.visibility[0] ?? null,
+    uvIndex: hourly.uvIndex[0] ?? null,
   };
 
   return {

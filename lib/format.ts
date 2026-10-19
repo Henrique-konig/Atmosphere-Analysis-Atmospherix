@@ -49,4 +49,14 @@ export function compassPoint(deg: number): string {
   return COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
 }
 
-export const formatTemp = (t: number) => `${Math.round(t)}°`;
+/** Shown in place of a value the model did not provide. */
+export const MISSING = "—";
+
+export const formatTemp = (t: number | null) => (t == null ? MISSING : `${Math.round(t)}°`);
+
+/** Rounded to `digits` decimals, or "—" when the value is missing. */
+export const formatNumber = (v: number | null, digits = 0) =>
+  v == null ? MISSING : digits > 0 ? v.toFixed(digits) : String(Math.round(v));
+
+/** The values of a series that the model actually provided. */
+export const present = (values: (number | null)[]) => values.filter((v): v is number => v != null);

@@ -22,8 +22,9 @@ export interface Condition {
 }
 
 /** WMO weather interpretation codes, as returned by Open-Meteo. */
-export function describeWeather(code: number, isDay = true): Condition {
+export function describeWeather(code: number | null, isDay = true): Condition {
   const sky = isDay ? "day" : "night";
+  if (code == null) return { label: "Indisponível", icon: "cloud", theme: `cloudy-${sky}` };
   if (code === 0) {
     return {
       label: isDay ? "Ensolarado" : "Céu limpo",
@@ -78,10 +79,10 @@ export function visibilityLabel(meters: number): string {
   return "Neblina: visibilidade muito baixa.";
 }
 
-export function feelsLikeLabel(actual: number, feels: number, humidity: number): string {
+export function feelsLikeLabel(actual: number, feels: number, humidity: number | null): string {
   const diff = feels - actual;
   if (diff >= 2)
-    return humidity >= 60
+    return humidity != null && humidity >= 60
       ? "A umidade faz parecer mais quente."
       : "Parece mais quente que a temperatura real.";
   if (diff <= -2) return "O vento faz parecer mais frio.";

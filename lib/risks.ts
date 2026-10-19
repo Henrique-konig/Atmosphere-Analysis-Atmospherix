@@ -1,3 +1,4 @@
+import { present } from "./format";
 import type { Forecast } from "./types";
 
 export type RiskLevel = "atenção" | "alerta";
@@ -19,10 +20,13 @@ export interface Risk {
  */
 export function detectRisks(forecast: Forecast): Risk[] {
   const { hourly, daily } = forecast;
+  // A missing value never triggers a risk.
+  const atLeast = (v: number | null, limit: number) => v != null && v >= limit;
+  const atMost = (v: number | null, limit: number) => v != null && v <= limit;
   const risks: Risk[] = [];
   const firstHour = (test: (i: number) => boolean) => hourly.time.findIndex((_, i) => test(i));
 
-  const storm = firstHour((i) => hourly.weatherCode[i] >= 95);
+  const storm = firstHour((i) => atLeast(hourly.weatherCode[i], 95));
   if (storm >= 0) {
     const hail = hourly.weatherCode.some((c) => c === 96 || c === 99);
     risks.push({
@@ -34,11 +38,12 @@ export function detectRisks(forecast: Forecast): Risk[] {
     });
   }
 
-  const maxRainHour = Math.max(0, ...hourly.precipitation);
-  const heavyHour = firstHour((i) => hourly.precipitation[i] >= 10);
-  const heavyDay = daily.precipitationSum.slice(0, 2).findIndex((mm) => mm >= 50);
+  const maxRainHour = Math.max(0, ...present(hourly.precipitation));
+  const heavyHour = firstHour((i) => atLeast(hourly.precipitation[i], 10));
+  const heavyDay = daily.precipitationSum.slice(0, 2).findIndex((mm) => atLeast(mm, 50));
   if (heavyHour >= 0 || heavyDay >= 0) {
-    const severe = maxRainHour >= 25 || daily.precipitationSum.slice(0, 2).some((mm) => mm >= 80);
+    const severe =
+      maxRainHour >= 25 || daily.precipitationSum.slice(0, 2).some((mm) => atLeast(mm, 80));
     risks.push({
       id: "rain",
       level: severe ? "alerta" : "atenção",
@@ -46,14 +51,14 @@ export function detectRisks(forecast: Forecast): Risk[] {
       detail:
         heavyHour >= 0
           ? `Até ${Math.round(maxRainHour)} mm em uma hora. Risco de alagamentos.`
-          : `Acumulado de ${Math.round(daily.precipitationSum[heavyDay])} mm no dia. Risco de alagamentos.`,
+          : `Acumulado de ${Math.round(daily.precipitationSum[heavyDay] ?? 0)} mm no dia. Risco de alagamentos.`,
       time: heavyHour >= 0 ? hourly.time[heavyHour] : daily.time[heavyDay],
       allDay: heavyHour < 0,
     });
   }
 
-  const maxGust = Math.max(0, ...hourly.windGusts);
-  const gust = firstHour((i) => hourly.windGusts[i] >= 60);
+  const maxGust = Math.max(0, ...present(hourly.windGusts));
+  const gust = firstHour((i) => atLeast(hourly.windGusts[i], 60));
   if (gust >= 0) {
     risks.push({
       id: "wind",
@@ -64,9 +69,9 @@ export function detectRisks(forecast: Forecast): Risk[] {
     });
   }
 
-  const hot = daily.temperatureMax.slice(0, 2).findIndex((t) => t >= 35);
+  const hot = daily.temperatureMax.slice(0, 2).findIndex((t) => atLeast(t, 35));
   if (hot >= 0) {
-    const max = Math.max(...daily.temperatureMax.slice(0, 2));
+    const max = Math.max(...present(daily.temperatureMax.slice(0, 2)));
     risks.push({
       id: "heat",
       level: max >= 38 ? "alerta" : "atenção",
@@ -77,9 +82,9 @@ export function detectRisks(forecast: Forecast): Risk[] {
     });
   }
 
-  const cold = daily.temperatureMin.slice(0, 2).findIndex((t) => t <= 3);
+  const cold = daily.temperatureMin.slice(0, 2).findIndex((t) => atMost(t, 3));
   if (cold >= 0) {
-    const min = Math.min(...daily.temperatureMin.slice(0, 2));
+    const min = Math.min(...present(daily.temperatureMin.slice(0, 2)));
     risks.push({
       id: "cold",
       level: min <= 0 ? "alerta" : "atenção",
@@ -90,9 +95,9 @@ export function detectRisks(forecast: Forecast): Risk[] {
     });
   }
 
-  const uv = daily.uvIndexMax.slice(0, 2).findIndex((v) => v >= 8);
+  const uv = daily.uvIndexMax.slice(0, 2).findIndex((v) => atLeast(v, 8));
   if (uv >= 0) {
-    const max = Math.max(...daily.uvIndexMax.slice(0, 2));
+    const max = Math.max(...present(daily.uvIndexMax.slice(0, 2)));
     risks.push({
       id: "uv",
       level: max >= 11 ? "alerta" : "atenção",
@@ -103,7 +108,7 @@ export function detectRisks(forecast: Forecast): Risk[] {
     });
   }
 
-  const fog = firstHour((i) => hourly.visibility[i] > 0 && hourly.visibility[i] < 1000);
+  const fog = firstHour((i) => hourly.visibility[i] != null && hourly.visibility[i]! < 1000);
   if (fog >= 0) {
     risks.push({
       id: "fog",

@@ -179,7 +179,7 @@ export default function WeatherScreen() {
                   now={forecast.current.time}
                   sunrise={forecast.daily.sunrise[0]}
                   sunset={forecast.daily.sunset[0]}
-                  nextSunrise={forecast.daily.sunrise[1]}
+                  nextSunrise={forecast.daily.sunrise[1] ?? null}
                   daylight={forecast.daily.daylightDuration[0]}
                   timezone={forecast.timezone}
                 />

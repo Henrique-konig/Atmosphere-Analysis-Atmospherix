@@ -119,11 +119,20 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
   const totalNow = rain ? Math.max(...rain.precipitation[current]) : 0;
 
   return (
-    <Card title="Mapa de precipitação" icon={CloudRain} className="rain-map">
+    <Card title="Previsão de chuva" icon={CloudRain} className="rain-map">
+      <p className="card-summary">
+        Previsão do modelo para a região, não é radar. Pancadas isoladas podem não aparecer.
+      </p>
       <div className="rain-map-frame">
-        <div ref={containerRef} className="rain-map-canvas" aria-label="Mapa de chuva da região" />
+        <div
+          ref={containerRef}
+          className="rain-map-canvas"
+          aria-label="Mapa da previsão de chuva da região"
+        />
         {!rain && <div className="rain-map-status">Carregando…</div>}
-        {rain && totalNow < 0.1 && <div className="rain-map-badge">Sem chuva na região</div>}
+        {rain && totalNow < 0.1 && (
+          <div className="rain-map-badge">Sem chuva prevista na região</div>
+        )}
       </div>
       {rain && steps > 0 && (
         <div className="rain-map-controls">

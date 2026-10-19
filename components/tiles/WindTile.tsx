@@ -1,11 +1,11 @@
 import { Wind } from "lucide-react";
-import { compassPoint } from "@/lib/format";
+import { compassPoint, formatNumber, MISSING } from "@/lib/format";
 import Card from "../Card";
 
 interface Props {
-  speed: number;
-  gusts: number;
-  direction: number;
+  speed: number | null;
+  gusts: number | null;
+  direction: number | null;
 }
 
 export default function WindTile({ speed, gusts, direction }: Props) {
@@ -15,16 +15,16 @@ export default function WindTile({ speed, gusts, direction }: Props) {
       <dl className="wind-rows">
         <div>
           <dt>Vento</dt>
-          <dd>{Math.round(speed)} km/h</dd>
+          <dd>{formatNumber(speed)} km/h</dd>
         </div>
         <div>
           <dt>Rajadas</dt>
-          <dd>{Math.round(gusts)} km/h</dd>
+          <dd>{formatNumber(gusts)} km/h</dd>
         </div>
         <div>
           <dt>Direção</dt>
           <dd>
-            {Math.round(direction)}° {compassPoint(direction)}
+            {direction == null ? MISSING : `${Math.round(direction)}° ${compassPoint(direction)}`}
           </dd>
         </div>
       </dl>
@@ -32,7 +32,11 @@ export default function WindTile({ speed, gusts, direction }: Props) {
         viewBox="0 0 120 120"
         className="compass"
         role="img"
-        aria-label={`Vento de ${compassPoint(direction)}`}
+        aria-label={
+          direction == null
+            ? "Direção do vento indisponível"
+            : `Vento de ${compassPoint(direction)}`
+        }
       >
         {ticks.map((deg) => (
           <line
@@ -58,14 +62,16 @@ export default function WindTile({ speed, gusts, direction }: Props) {
           O
         </text>
         {/* The arrow points where the wind blows to (opposite of where it comes from). */}
-        <g transform={`rotate(${direction + 180} 60 60)`}>
-          <line x1="60" y1="96" x2="60" y2="30" className="compass-arrow" />
-          <path d="M 60 22 L 66 34 L 54 34 Z" className="compass-head" />
-          <circle cx="60" cy="96" r="3" className="compass-tail" />
-        </g>
+        {direction != null && (
+          <g transform={`rotate(${direction + 180} 60 60)`}>
+            <line x1="60" y1="96" x2="60" y2="30" className="compass-arrow" />
+            <path d="M 60 22 L 66 34 L 54 34 Z" className="compass-head" />
+            <circle cx="60" cy="96" r="3" className="compass-tail" />
+          </g>
+        )}
         <circle cx="60" cy="60" r="17" className="compass-center" />
         <text x="60" y="60" className="compass-speed">
-          {Math.round(speed)}
+          {formatNumber(speed)}
         </text>
         <text x="60" y="71" className="compass-unit">
           km/h

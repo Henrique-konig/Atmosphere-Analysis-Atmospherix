@@ -21,56 +21,57 @@ export interface PrecipitationGrid {
   precipitation: number[][];
 }
 
+/** Values the model did not provide are null and shown as "—", never as 0. */
 export interface CurrentConditions {
   time: number;
-  temperature: number;
-  apparentTemperature: number;
-  humidity: number;
-  dewPoint: number;
-  precipitation: number;
-  weatherCode: number;
+  temperature: number | null;
+  apparentTemperature: number | null;
+  humidity: number | null;
+  dewPoint: number | null;
+  precipitation: number | null;
+  weatherCode: number | null;
   isDay: boolean;
-  cloudCover: number;
-  pressure: number;
-  windSpeed: number;
-  windDirection: number;
-  windGusts: number;
-  visibility: number;
-  uvIndex: number;
+  cloudCover: number | null;
+  pressure: number | null;
+  windSpeed: number | null;
+  windDirection: number | null;
+  windGusts: number | null;
+  visibility: number | null;
+  uvIndex: number | null;
 }
 
 export interface HourlyForecast {
   time: number[];
-  temperature: number[];
-  apparentTemperature: number[];
-  humidity: number[];
-  dewPoint: number[];
-  precipitationProbability: number[];
-  precipitation: number[];
-  weatherCode: number[];
-  pressure: number[];
-  visibility: number[];
-  windSpeed: number[];
-  windDirection: number[];
-  windGusts: number[];
-  uvIndex: number[];
+  temperature: (number | null)[];
+  apparentTemperature: (number | null)[];
+  humidity: (number | null)[];
+  dewPoint: (number | null)[];
+  precipitationProbability: (number | null)[];
+  precipitation: (number | null)[];
+  weatherCode: (number | null)[];
+  pressure: (number | null)[];
+  visibility: (number | null)[];
+  windSpeed: (number | null)[];
+  windDirection: (number | null)[];
+  windGusts: (number | null)[];
+  uvIndex: (number | null)[];
   isDay: boolean[];
 }
 
 export interface DailyForecast {
   time: number[];
-  weatherCode: number[];
-  temperatureMax: number[];
-  temperatureMin: number[];
-  sunrise: number[];
-  sunset: number[];
-  daylightDuration: number[];
-  uvIndexMax: number[];
-  precipitationSum: number[];
-  precipitationProbabilityMax: number[];
-  windSpeedMax: number[];
-  windGustsMax: number[];
-  windDirectionDominant: number[];
+  weatherCode: (number | null)[];
+  temperatureMax: (number | null)[];
+  temperatureMin: (number | null)[];
+  sunrise: (number | null)[];
+  sunset: (number | null)[];
+  daylightDuration: (number | null)[];
+  uvIndexMax: (number | null)[];
+  precipitationSum: (number | null)[];
+  precipitationProbabilityMax: (number | null)[];
+  windSpeedMax: (number | null)[];
+  windGustsMax: (number | null)[];
+  windDirectionDominant: (number | null)[];
 }
 
 export interface Forecast {

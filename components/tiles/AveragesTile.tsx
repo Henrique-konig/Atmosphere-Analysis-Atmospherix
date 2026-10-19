@@ -1,5 +1,5 @@
 import { ChartNoAxesColumn } from "lucide-react";
-import { formatTemp } from "@/lib/format";
+import { formatTemp, MISSING } from "@/lib/format";
 import type { TemperatureAverages } from "@/lib/types";
 import Card from "../Card";
 
@@ -7,7 +7,7 @@ export default function AveragesTile({
   todayMax,
   averages,
 }: {
-  todayMax: number;
+  todayMax: number | null;
   averages: TemperatureAverages | null;
 }) {
   if (!averages) {
@@ -17,13 +17,14 @@ export default function AveragesTile({
       </Card>
     );
   }
-  const diff = Math.round(todayMax - averages.max);
-  const headline = diff === 0 ? "Na média" : `${diff > 0 ? "+" : ""}${diff}°`;
+  const diff = todayMax == null ? null : Math.round(todayMax - averages.max);
+  const headline =
+    diff == null ? MISSING : diff === 0 ? "Na média" : `${diff > 0 ? "+" : ""}${diff}°`;
   return (
     <Card title="Média" icon={ChartNoAxesColumn} className="tile">
       <p className="tile-value">{headline}</p>
       <p className="tile-label">
-        {diff === 0
+        {diff == null || diff === 0
           ? "máxima de hoje"
           : diff > 0
             ? "acima da máxima média"
