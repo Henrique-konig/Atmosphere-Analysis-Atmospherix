@@ -1,7 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { averageForDate } from "@/lib/averages";
 import { describeWeather, pressureTrend, uvLevel } from "@/lib/conditions";
-import { compassPoint, formatHour, formatTime, formatWeekday } from "@/lib/format";
+import {
+  compassPoint,
+  formatHour,
+  formatNumber,
+  formatTemp,
+  formatTime,
+  formatWeekday,
+} from "@/lib/format";
 import { moonInfo, SYNODIC_MONTH } from "@/lib/moon";
 
 describe("averageForDate", () => {
@@ -79,5 +86,12 @@ describe("format", () => {
     expect(compassPoint(0)).toBe("N");
     expect(compassPoint(270)).toBe("O");
     expect(compassPoint(-45)).toBe("NO");
+  });
+
+  it("shows missing values as a dash instead of 0", () => {
+    expect(formatTemp(null)).toBe("—");
+    expect(formatTemp(0)).toBe("0°");
+    expect(formatNumber(null, 1)).toBe("—");
+    expect(formatNumber(2.345, 1)).toBe("2.3");
   });
 });

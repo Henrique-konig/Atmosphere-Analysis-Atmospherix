@@ -1,5 +1,6 @@
 import { ArrowDown, ArrowRight, ArrowUp, Gauge } from "lucide-react";
 import { pressureTrend } from "@/lib/conditions";
+import { formatNumber } from "@/lib/format";
 import Card from "../Card";
 
 const MIN = 970;
@@ -13,12 +14,12 @@ function point(fraction: number, r: number) {
   return { x: 60 + r * Math.cos(rad), y: 60 + r * Math.sin(rad) };
 }
 
-export default function PressureTile({ now, later }: { now: number; later: number }) {
-  const trend = pressureTrend(now, later);
-  const fraction = Math.min(1, Math.max(0, (now - MIN) / (MAX - MIN)));
+export default function PressureTile({ now, later }: { now: number | null; later: number | null }) {
+  const trend = now != null && later != null ? pressureTrend(now, later) : null;
+  const fraction = now == null ? null : Math.min(1, Math.max(0, (now - MIN) / (MAX - MIN)));
   const start = point(0, 44);
   const end = point(1, 44);
-  const needle = point(fraction, 44);
+  const needle = fraction == null ? null : point(fraction, 44);
   const TrendIcon = trend === "subindo" ? ArrowUp : trend === "caindo" ? ArrowDown : ArrowRight;
 
   return (
@@ -27,22 +28,24 @@ export default function PressureTile({ now, later }: { now: number; later: numbe
         viewBox="0 0 120 108"
         className="gauge"
         role="img"
-        aria-label={`Pressão ${Math.round(now)} hPa, ${trend}`}
+        aria-label={`Pressão ${formatNumber(now)} hPa${trend ? `, ${trend}` : ""}`}
       >
         <path
           d={`M ${start.x} ${start.y} A 44 44 0 1 1 ${end.x} ${end.y}`}
           className="gauge-track"
         />
-        <circle cx={needle.x} cy={needle.y} r="5" className="gauge-needle" />
-        <TrendIcon x={52} y={34} width={16} height={16} className="gauge-trend" aria-hidden />
+        {needle && <circle cx={needle.x} cy={needle.y} r="5" className="gauge-needle" />}
+        {trend && (
+          <TrendIcon x={52} y={34} width={16} height={16} className="gauge-trend" aria-hidden />
+        )}
         <text x="60" y="68" className="gauge-value">
-          {Math.round(now)}
+          {formatNumber(now)}
         </text>
         <text x="60" y="82" className="gauge-unit">
           hPa
         </text>
       </svg>
-      <p className="tile-text">Pressão {trend} nas próximas horas.</p>
+      {trend && <p className="tile-text">Pressão {trend} nas próximas horas.</p>}
     </Card>
   );
 }

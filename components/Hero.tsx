@@ -1,6 +1,6 @@
 import { ChevronDown, MapPin, Navigation } from "lucide-react";
 import { describeWeather } from "@/lib/conditions";
-import { formatLongDate, formatTemp } from "@/lib/format";
+import { formatLongDate, formatNumber, formatTemp } from "@/lib/format";
 import type { SavedPlace } from "@/lib/storage";
 import type { Forecast } from "@/lib/types";
 
@@ -24,7 +24,7 @@ export default function Hero({ place, forecast, onOpenCities }: Props) {
       {place.current && <p className="hero-sub">Minha localização</p>}
       <p
         className="hero-temp"
-        aria-label={`Temperatura agora: ${Math.round(current.temperature)} graus`}
+        aria-label={`Temperatura agora: ${formatNumber(current.temperature)} graus`}
       >
         {formatTemp(current.temperature)}
       </p>

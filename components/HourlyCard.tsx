@@ -1,6 +1,6 @@
 import { Clock, Sunrise, Sunset } from "lucide-react";
 import { describeWeather } from "@/lib/conditions";
-import { formatHour, formatTemp, formatTime } from "@/lib/format";
+import { formatHour, formatTemp, formatTime, present } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import WeatherIcon from "./WeatherIcon";
@@ -22,15 +22,18 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
     [daily.sunset, false],
   ] as const) {
     for (const time of list) {
-      if (time > current.time && time < end) items.push({ kind: "sun", time, rise });
+      if (time != null && time > current.time && time < end)
+        items.push({ kind: "sun", time, rise });
     }
   }
   items.sort((a, b) => a.time - b.time);
 
   const condition = describeWeather(current.weatherCode, current.isDay);
-  const summary = `${condition.label} agora. Rajadas de vento de até ${Math.round(
-    Math.max(...hourly.windGusts.slice(0, HOURS)),
-  )} km/h nas próximas horas.`;
+  const gusts = present(hourly.windGusts.slice(0, HOURS));
+  const summary =
+    gusts.length > 0
+      ? `${condition.label} agora. Rajadas de vento de até ${Math.round(Math.max(...gusts))} km/h nas próximas horas.`
+      : `${condition.label} agora.`;
 
   return (
     <Card title="Previsão por hora" icon={Clock} className="hourly">
@@ -49,7 +52,7 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
                   }
                   size={26}
                 />
-                {hourly.precipitationProbability[item.index] >= 20 && (
+                {(hourly.precipitationProbability[item.index] ?? 0) >= 20 && (
                   <span className="hourly-prob">
                     {hourly.precipitationProbability[item.index]}%
                   </span>

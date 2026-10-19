@@ -1,18 +1,27 @@
 import { Sunrise, Sunset } from "lucide-react";
-import { formatDuration, formatTime } from "@/lib/format";
+import { formatDuration, formatTime, MISSING } from "@/lib/format";
 import Card from "../Card";
 
 interface Props {
   now: number;
-  sunrise: number;
-  sunset: number;
-  nextSunrise?: number;
-  daylight: number;
+  sunrise: number | null;
+  sunset: number | null;
+  nextSunrise: number | null;
+  daylight: number | null;
   timezone: string;
 }
 
 /** Sun path as an arc from sunrise (left) to sunset (right), with the sun's position. */
 export default function SunTile({ now, sunrise, sunset, nextSunrise, daylight, timezone }: Props) {
+  // Polar day or night, or data the model did not provide.
+  if (sunrise == null || sunset == null) {
+    return (
+      <Card title="Sol" icon={Sunrise} className="tile">
+        <p className="tile-value">{MISSING}</p>
+        <p className="tile-text">Horários do sol indisponíveis para hoje.</p>
+      </Card>
+    );
+  }
   const beforeSunset = now < sunset;
   const progress = Math.min(1, Math.max(0, (now - sunrise) / (sunset - sunrise)));
   const isDay = now >= sunrise && now <= sunset;
@@ -39,7 +48,7 @@ export default function SunTile({ now, sunrise, sunset, nextSunrise, daylight, t
           ? `Nascer: ${formatTime(sunrise, timezone)}`
           : `Pôr do sol: ${formatTime(sunset, timezone)}`}
         <br />
-        Duração do dia: {formatDuration(daylight)}
+        Duração do dia: {daylight == null ? MISSING : formatDuration(daylight)}
       </p>
     </Card>
   );

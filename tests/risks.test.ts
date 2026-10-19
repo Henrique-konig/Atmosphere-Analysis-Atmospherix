@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { detectRisks } from "@/lib/risks";
 import { calmForecast } from "./fixtures";
 
-const at = (values: number[], index: number, value: number) => {
+const at = (values: (number | null)[], index: number, value: number | null) => {
   const copy = [...values];
   copy[index] = value;
   return copy;
@@ -71,6 +71,14 @@ describe("detectRisks", () => {
       ["storm", false],
       ["uv", true],
     ]);
+  });
+
+  it("never raises a risk from missing values", () => {
+    const f = calmForecast({
+      hourly: { visibility: at(calm.hourly.visibility, 2, null) },
+      daily: { temperatureMin: at(calm.daily.temperatureMin, 0, null) },
+    });
+    expect(detectRisks(f)).toEqual([]);
   });
 
   it("ignores days beyond tomorrow", () => {

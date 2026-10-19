@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import { colorAt, TEMPERATURE_SCALE } from "@/lib/colors";
 import { describeWeather } from "@/lib/conditions";
-import { formatTemp, formatWeekday } from "@/lib/format";
+import { formatNumber, formatTemp, formatWeekday, present } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import WeatherIcon from "./WeatherIcon";
@@ -13,8 +13,8 @@ const rgb = (t: number) => {
 
 export default function DailyCard({ forecast }: { forecast: Forecast }) {
   const { daily, timezone, current } = forecast;
-  const low = Math.min(...daily.temperatureMin);
-  const high = Math.max(...daily.temperatureMax);
+  const low = Math.min(...present(daily.temperatureMin));
+  const high = Math.max(...present(daily.temperatureMax));
   const span = Math.max(1, high - low);
   const pct = (t: number) => ((t - low) / span) * 100;
 
@@ -30,23 +30,25 @@ export default function DailyCard({ forecast }: { forecast: Forecast }) {
               <span className="daily-day">{i === 0 ? "Hoje" : formatWeekday(time, timezone)}</span>
               <span className="daily-icon">
                 <WeatherIcon kind={describeWeather(daily.weatherCode[i]).icon} size={22} />
-                {prob >= 20 && <span className="daily-prob">{prob}%</span>}
+                {prob != null && prob >= 20 && <span className="daily-prob">{prob}%</span>}
               </span>
               <span className="daily-min">{formatTemp(min)}</span>
               <span
                 className="range"
                 role="img"
-                aria-label={`Mínima ${Math.round(min)} graus, máxima ${Math.round(max)} graus`}
+                aria-label={`Mínima ${formatNumber(min)} graus, máxima ${formatNumber(max)} graus`}
               >
-                <span
-                  className="range-fill"
-                  style={{
-                    left: `${pct(min)}%`,
-                    right: `${100 - pct(max)}%`,
-                    background: `linear-gradient(90deg, ${rgb(min)}, ${rgb((min + max) / 2)}, ${rgb(max)})`,
-                  }}
-                />
-                {i === 0 && (
+                {min != null && max != null && (
+                  <span
+                    className="range-fill"
+                    style={{
+                      left: `${pct(min)}%`,
+                      right: `${100 - pct(max)}%`,
+                      background: `linear-gradient(90deg, ${rgb(min)}, ${rgb((min + max) / 2)}, ${rgb(max)})`,
+                    }}
+                  />
+                )}
+                {i === 0 && current.temperature != null && (
                   <span
                     className="range-now"
                     style={{ left: `${Math.min(100, Math.max(0, pct(current.temperature)))}%` }}

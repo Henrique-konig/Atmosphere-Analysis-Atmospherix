@@ -95,8 +95,9 @@ describe("fetchForecast", () => {
     expect(f.hourly.time[0]).toBe(t0 + 3 * 3600);
     expect(f.hourly.temperature[0]).toBe(23);
     expect(f.hourly.isDay[0]).toBe(true);
-    expect(f.hourly.precipitationProbability[0]).toBe(0); // null → 0
-    expect(f.daily.precipitationSum).toEqual([0]);
+    // Missing values stay missing instead of turning into a fake 0.
+    expect(f.hourly.precipitationProbability[0]).toBeNull();
+    expect(f.daily.precipitationSum).toEqual([null]);
   });
 
   it("fills current UV, visibility and dew point from the current hour", async () => {
