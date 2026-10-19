@@ -31,8 +31,15 @@ export function HumidityTile({
 }) {
   return (
     <Card title="Umidade" icon={Droplet} className="tile">
-      <p className="tile-value">{formatNumber(humidity)}%</p>
-      <div className="meter" role="img" aria-label={`Umidade ${formatNumber(humidity)}%`}>
+      <p className="tile-value">
+        {formatNumber(humidity)}
+        {humidity != null && "%"}
+      </p>
+      <div
+        className="meter"
+        role="img"
+        aria-label={humidity == null ? "Umidade indisponível" : `Umidade ${Math.round(humidity)}%`}
+      >
         {humidity != null && <span style={{ width: `${Math.min(100, humidity)}%` }} />}
       </div>
       {dewPoint != null && <p className="tile-text">{humidityLabel(dewPoint)}</p>}
@@ -45,7 +52,7 @@ export function VisibilityTile({ meters }: { meters: number | null }) {
   return (
     <Card title="Visibilidade" icon={Eye} className="tile">
       <p className="tile-value">
-        {formatNumber(km, km != null && km < 10 ? 1 : 0)} <small>km</small>
+        {formatNumber(km, km != null && km < 10 ? 1 : 0)} {km != null && <small>km</small>}
       </p>
       {meters != null && <p className="tile-text">{visibilityLabel(meters)}</p>}
     </Card>

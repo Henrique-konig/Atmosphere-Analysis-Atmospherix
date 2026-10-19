@@ -15,11 +15,11 @@ export default function WindTile({ speed, gusts, direction }: Props) {
       <dl className="wind-rows">
         <div>
           <dt>Vento</dt>
-          <dd>{formatNumber(speed)} km/h</dd>
+          <dd>{speed == null ? MISSING : `${Math.round(speed)} km/h`}</dd>
         </div>
         <div>
           <dt>Rajadas</dt>
-          <dd>{formatNumber(gusts)} km/h</dd>
+          <dd>{gusts == null ? MISSING : `${Math.round(gusts)} km/h`}</dd>
         </div>
         <div>
           <dt>Direção</dt>

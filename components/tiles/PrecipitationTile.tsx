@@ -28,7 +28,8 @@ export default function PrecipitationTile({ forecast }: { forecast: Forecast }) 
   return (
     <Card title="Precipitação" icon={Droplets} className="tile">
       <p className="tile-value">
-        {formatNumber(today, today != null && today >= 10 ? 0 : 1)} <small>mm</small>
+        {formatNumber(today, today != null && today >= 10 ? 0 : 1)}{" "}
+        {today != null && <small>mm</small>}
       </p>
       <p className="tile-label">Hoje</p>
       <p className="tile-text">{text}</p>
