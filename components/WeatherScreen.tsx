@@ -8,15 +8,18 @@ import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
 import { detectRisks } from "@/lib/risks";
 import {
+  loadHere,
   loadLastPlace,
   loadSavedPlaces,
   samePlace,
+  storeHere,
   storeLastPlace,
   storeSavedPlaces,
   type SavedPlace,
 } from "@/lib/storage";
 import CitySheet from "./CitySheet";
 import DailyCard from "./DailyCard";
+import DaySheet from "./DaySheet";
 import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
 import RainMap from "./RainMap";
@@ -74,16 +77,25 @@ export default function WeatherScreen() {
   // Rendered client-only, so storage can be read during the first render.
   const [place, setPlace] = useState<SavedPlace | null>(() => loadLastPlace());
   const [saved, setSaved] = useState<SavedPlace[]>(() => loadSavedPlaces());
+  const [here, setHere] = useState<SavedPlace | null>(
+    () => loadHere() ?? (place?.current ? place : null),
+  );
   const [locating, setLocating] = useState(() => place === null);
   const [locateError, setLocateError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const [day, setDay] = useState<number | null>(null);
   const { canInstall, install } = useInstallPrompt();
 
   const choose = useCallback((next: SavedPlace) => {
     setPlace(next);
     storeLastPlace(next);
     setSheetOpen(false);
-    if (!next.current) {
+    setDay(null);
+    if (next.current) {
+      setHere(next);
+      storeHere(next);
+    } else {
+      // Every city picked from the search stays in the list, like the iPhone Weather app.
       setSaved((list) => (list.some((p) => samePlace(p, next)) ? list : [...list, next]));
     }
   }, []);
@@ -173,7 +185,7 @@ export default function WeatherScreen() {
             <HourlyCard forecast={forecast} />
             <div className="columns">
               <div className="col-main">
-                <DailyCard forecast={forecast} />
+                <DailyCard forecast={forecast} onSelectDay={setDay} />
                 <RainMap
                   latitude={place.latitude}
                   longitude={place.longitude}
@@ -222,12 +234,19 @@ export default function WeatherScreen() {
             Dados: <a href="https://open-meteo.com/">Open-Meteo</a> · Mapa: Esri, OpenStreetMap ·{" "}
             <a href="https://github.com/Henrique-konig/Atmosphere-Analysis-Atmospherix">Código</a>
           </footer>
+          <DaySheet
+            forecast={forecast}
+            day={day}
+            onSelectDay={setDay}
+            onClose={() => setDay(null)}
+          />
         </>
       )}
 
       <CitySheet
         open={sheetOpen}
         saved={saved}
+        here={here}
         active={place}
         locating={locating}
         locateError={locateError}

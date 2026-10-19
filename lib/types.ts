@@ -81,7 +81,10 @@ export interface Forecast {
   /** IANA time zone of the location, used to show local times. */
   timezone: string;
   current: CurrentConditions;
+  /** From the current hour, for the next 48 hours. */
   hourly: HourlyForecast;
+  /** Every hour of the forecast days, from local midnight today: the day details. */
+  dayHours: HourlyForecast;
   daily: DailyForecast;
 }
 
@@ -95,6 +98,17 @@ export interface TemperatureAverages {
 export interface ForecastResponse {
   forecast: Forecast;
   averages: TemperatureAverages | null;
+}
+
+/** What the city list shows for each saved place. */
+export interface PlaceSummary {
+  time: number;
+  timezone: string;
+  temperature: number | null;
+  weatherCode: number | null;
+  isDay: boolean;
+  max: number | null;
+  min: number | null;
 }
 
 export interface Place {
