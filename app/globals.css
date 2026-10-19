@@ -142,6 +142,24 @@ a {
   flex-shrink: 0;
 }
 
+.install-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 38px;
+  margin-right: 8px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 19px;
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
 .round-button.subtle {
   background: transparent;
   color: var(--muted);

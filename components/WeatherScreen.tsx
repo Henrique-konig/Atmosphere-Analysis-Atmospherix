@@ -1,8 +1,9 @@
 "use client";
 
-import { RefreshCw, Search } from "lucide-react";
+import { Download, RefreshCw, Search } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForecast } from "@/hooks/useForecast";
+import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
 import { detectRisks } from "@/lib/risks";
@@ -76,6 +77,7 @@ export default function WeatherScreen() {
   const [locating, setLocating] = useState(() => place === null);
   const [locateError, setLocateError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { canInstall, install } = useInstallPrompt();
 
   const choose = useCallback((next: SavedPlace) => {
     setPlace(next);
@@ -133,6 +135,11 @@ export default function WeatherScreen() {
   return (
     <main className={`screen theme-${theme}`}>
       <div className="topbar">
+        {canInstall && (
+          <button type="button" className="install-button" onClick={install}>
+            <Download size={16} aria-hidden /> Instalar app
+          </button>
+        )}
         <button
           type="button"
           className="round-button"
