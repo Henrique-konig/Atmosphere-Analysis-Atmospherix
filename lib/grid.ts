@@ -54,6 +54,18 @@ export function parseCoordinates(params: URLSearchParams): { lat: number; lon: n
   return { lat, lon };
 }
 
+/** "lat=-30,-23&lon=-51,-46" → two points; null when any is invalid or the lists differ. */
+export function parseCoordinateList(
+  params: URLSearchParams,
+  max: number,
+): { lat: number; lon: number }[] | null {
+  const lats = (params.get("lat") ?? "").split(",");
+  const lons = (params.get("lon") ?? "").split(",");
+  if (lats.length !== lons.length || lats.length > max) return null;
+  const points = lats.map((lat, i) => parseCoordinates(new URLSearchParams({ lat, lon: lons[i] })));
+  return points.every((p) => p !== null) ? (points as { lat: number; lon: number }[]) : null;
+}
+
 export function round(value: number, digits = 1): number {
   const f = 10 ** digits;
   return Math.round(value * f) / f;

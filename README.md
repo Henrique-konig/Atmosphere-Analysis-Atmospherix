@@ -14,13 +14,18 @@ ou no computador, e pode ser instalado como app.
   índice UV muito alto e neblina, estimados a partir da previsão.
 - **Previsão por hora** (24 h) com nascer e pôr do sol, e **previsão para 10 dias** com barras de
   temperatura coloridas.
+- **Detalhes de cada dia**: toque em um dia da previsão de 10 dias para ver o gráfico de temperatura
+  ao longo do dia com a chance de chuva por hora, a previsão hora a hora (com vento), chuva total,
+  sensação térmica, vento e rajadas, índice UV, umidade, pressão e nascer/pôr do sol. Dá para trocar
+  de dia pela faixa de datas, deslizando para o lado ou com as setas do teclado.
 - **Mapa de precipitação** da região com a chuva prevista para as próximas 12 horas, animado (é
   previsão do modelo, não radar observado).
 - **Detalhes**: índice UV, nascer/pôr do sol com a trajetória do sol, vento com bússola, precipitação,
   sensação térmica, umidade e ponto de orvalho, visibilidade, pressão com tendência, fase da lua
   (com iluminação e próxima lua cheia) e comparação com a **média histórica** de temperatura.
-- **Cidades**: busca com autocompletar, "usar minha localização" e lista de cidades salvas no
-  aparelho.
+- **Cidades**: busca com autocompletar e lista de cidades no estilo do Tempo do iPhone. Toda cidade
+  buscada fica salva automaticamente no aparelho e aparece num cartão com hora local, condição,
+  temperatura atual, máxima e mínima. "Minha localização" fica sempre no topo.
 - **Instalável (PWA)**: botão "Instalar app" no Chrome, Edge e Android; no iPhone, pelo menu
   Compartilhar → "Adicionar à Tela de Início". Abre em tela cheia, com ícone próprio, e mostra a
   última previsão carregada quando está sem internet.
@@ -71,6 +76,7 @@ app/
   api/forecast/route.ts  GET /api/forecast → previsão completa + média histórica
   api/rain/route.ts      GET /api/rain     → grade de chuva da região (mapa)
   api/geocode/route.ts   GET /api/geocode  → busca de cidades
+  api/summary/route.ts   GET /api/summary  → temperatura e condição das cidades salvas
   manifest.ts            Manifesto do PWA (nome, cores, ícones)
   layout.tsx, page.tsx, icon.svg, apple-icon.png
 components/              Tela, cartões, blocos de detalhe (tiles/), mapa e seletor de cidades

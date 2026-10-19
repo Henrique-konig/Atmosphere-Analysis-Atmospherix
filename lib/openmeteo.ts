@@ -7,6 +7,7 @@ import type {
   Forecast,
   GridSpec,
   HourlyForecast,
+  PlaceSummary,
   PrecipitationGrid,
   TemperatureAverages,
 } from "./types";
@@ -135,14 +136,8 @@ export async function fetchForecast(lat: number, lon: number): Promise<Forecast>
 
   const c = loc.current;
   const start = currentHourIndex(loc.hourly.time, c.time);
-  const end = start + HOURS_AHEAD;
-  const hourlyColumn = (name: string) => column(loc.hourly!, name, start, end);
-
-  const hourly = Object.fromEntries(
-    Object.entries(HOURLY_VARS).map(([key, name]) => [key, hourlyColumn(name)]),
-  ) as unknown as HourlyForecast;
-  hourly.time = loc.hourly.time.slice(start, end);
-  hourly.isDay = hourlyColumn("is_day").map(Boolean);
+  const hourly = hourlySlice(loc.hourly, start, start + HOURS_AHEAD);
+  const dayHours = hourlySlice(loc.hourly, 0);
 
   const daily = Object.fromEntries(
     Object.entries(DAILY_VARS).map(([key, name]) => [key, column(loc.daily!, name)]),
@@ -175,8 +170,53 @@ export async function fetchForecast(lat: number, lon: number): Promise<Forecast>
     timezone: loc.timezone,
     current,
     hourly,
+    dayHours,
     daily,
   };
+}
+
+function hourlySlice(series: Series & { time: number[] }, from: number, to?: number) {
+  const hourly = Object.fromEntries(
+    Object.entries(HOURLY_VARS).map(([key, name]) => [key, column(series, name, from, to)]),
+  ) as unknown as HourlyForecast;
+  hourly.time = series.time.slice(from, to);
+  hourly.isDay = hourly.isDay.map(Boolean);
+  return hourly;
+}
+
+/** Most places one city-list request may ask for. */
+export const MAX_SUMMARIES = 20;
+
+/** Current temperature, condition and today's range for several places in one request. */
+export async function fetchSummaries(
+  points: { lat: number; lon: number }[],
+): Promise<PlaceSummary[]> {
+  const json = await request<OpenMeteoLocation | OpenMeteoLocation[]>(
+    FORECAST_URL,
+    {
+      latitude: points.map((p) => String(round(p.lat, 3))).join(","),
+      longitude: points.map((p) => String(round(p.lon, 3))).join(","),
+      current: "temperature_2m,weather_code,is_day",
+      daily: "temperature_2m_max,temperature_2m_min",
+      timeformat: "unixtime",
+      timezone: "auto",
+      forecast_days: "1",
+    },
+    FORECAST_REVALIDATE,
+  );
+  const locations = Array.isArray(json) ? json : [json];
+  if (locations.length !== points.length) {
+    throw new OpenMeteoError("Resposta do Open-Meteo com número inesperado de pontos");
+  }
+  return locations.map((loc) => ({
+    time: loc.current?.time ?? 0,
+    timezone: loc.timezone,
+    temperature: loc.current?.temperature_2m ?? null,
+    weatherCode: loc.current?.weather_code ?? null,
+    isDay: Boolean(loc.current?.is_day ?? 1),
+    max: loc.daily?.temperature_2m_max?.[0] ?? null,
+    min: loc.daily?.temperature_2m_min?.[0] ?? null,
+  }));
 }
 
 const isoDate = (d: Date) => d.toISOString().slice(0, 10);

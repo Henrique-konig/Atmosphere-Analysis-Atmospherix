@@ -55,3 +55,9 @@ export function cssGradient(scale: ColorStop[]): string {
   });
   return `linear-gradient(to right, ${stops.join(", ")})`;
 }
+
+/** CSS color for a temperature, as on the 10-day bars. */
+export function temperatureColor(t: number): string {
+  const [r, g, b] = colorAt(TEMPERATURE_SCALE, t);
+  return `rgb(${r},${g},${b})`;
+}

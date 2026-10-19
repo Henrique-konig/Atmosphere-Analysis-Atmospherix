@@ -31,6 +31,11 @@ export function formatWeekday(unix: number, timeZone: string): string {
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
+/** "19" */
+export function formatDayOfMonth(unix: number, timeZone: string): string {
+  return formatter(timeZone, { day: "numeric" }).format(unix * 1000);
+}
+
 /** "segunda-feira, 19 de outubro" */
 export function formatLongDate(unix: number, timeZone: string): string {
   return formatter(timeZone, { weekday: "long", day: "numeric", month: "long" }).format(

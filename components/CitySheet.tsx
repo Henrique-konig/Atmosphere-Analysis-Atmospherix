@@ -1,14 +1,20 @@
 "use client";
 
 import { LoaderCircle, MapPin, Navigation, Search, Trash2, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { placeKey, usePlaceSummaries } from "@/hooks/usePlaceSummaries";
 import { usePlaceSearch } from "@/hooks/usePlaceSearch";
+import { describeWeather } from "@/lib/conditions";
+import { formatTemp, formatTime } from "@/lib/format";
 import { placeDetails } from "@/lib/places";
 import { fromSearch, samePlace, type SavedPlace } from "@/lib/storage";
+import type { PlaceSummary } from "@/lib/types";
 
 interface Props {
   open: boolean;
   saved: SavedPlace[];
+  /** The last device location, listed first as "Minha localização". */
+  here: SavedPlace | null;
   active: SavedPlace | null;
   locating: boolean;
   locateError: string | null;
@@ -19,8 +25,20 @@ interface Props {
 }
 
 export default function CitySheet(props: Props) {
-  const { open, saved, active, locating, locateError, onClose, onSelect, onLocate, onRemove } =
-    props;
+  const {
+    open,
+    saved,
+    here,
+    active,
+    locating,
+    locateError,
+    onClose,
+    onSelect,
+    onLocate,
+    onRemove,
+  } = props;
+  const listed = useMemo(() => (here ? [here, ...saved] : saved), [here, saved]);
+  const { summaries, now } = usePlaceSummaries(listed, open);
   const [query, setQuery] = useState("");
   const { places, error, loading } = usePlaceSearch(query);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -96,44 +114,111 @@ export default function CitySheet(props: Props) {
           </ul>
         ) : (
           <>
-            <button type="button" className="locate-button" onClick={onLocate} disabled={locating}>
-              {locating ? (
-                <LoaderCircle size={16} className="spin" aria-hidden />
-              ) : (
-                <Navigation size={16} aria-hidden />
-              )}
-              Usar minha localização
-            </button>
-            {locateError && <p className="sheet-status error">{locateError}</p>}
-            {saved.length > 0 && (
-              <ul className="sheet-list" aria-label="Cidades salvas">
-                {saved.map((place) => (
-                  <li
-                    key={`${place.latitude},${place.longitude}`}
-                    className={active && samePlace(place, active) ? "active" : ""}
-                  >
-                    <button type="button" onClick={() => onSelect(place)}>
-                      <MapPin size={16} aria-hidden />
-                      <span>
-                        <strong>{place.name}</strong>
-                        {place.detail && <small>{place.detail}</small>}
-                      </span>
-                    </button>
-                    <button
-                      type="button"
-                      className="round-button subtle"
-                      onClick={() => onRemove(place)}
-                      aria-label={`Remover ${place.name}`}
-                    >
-                      <Trash2 size={15} aria-hidden />
-                    </button>
-                  </li>
-                ))}
-              </ul>
+            {!here && (
+              <button
+                type="button"
+                className="locate-button"
+                onClick={onLocate}
+                disabled={locating}
+              >
+                {locating ? (
+                  <LoaderCircle size={16} className="spin" aria-hidden />
+                ) : (
+                  <Navigation size={16} aria-hidden />
+                )}
+                Usar minha localização
+              </button>
             )}
+            {locateError && <p className="sheet-status error">{locateError}</p>}
+            <ul className="city-list" aria-label="Cidades salvas">
+              {here && (
+                <CityCard
+                  place={here}
+                  summary={summaries[placeKey(here)]}
+                  now={now}
+                  active={Boolean(active?.current)}
+                  onSelect={() => {
+                    // Show the last known position at once, then refresh it from the device.
+                    onSelect(here);
+                    onLocate();
+                  }}
+                />
+              )}
+              {saved.map((place) => (
+                <CityCard
+                  key={placeKey(place)}
+                  place={place}
+                  summary={summaries[placeKey(place)]}
+                  now={now}
+                  active={Boolean(active && !active.current && samePlace(place, active))}
+                  onSelect={() => onSelect(place)}
+                  onRemove={() => onRemove(place)}
+                />
+              ))}
+            </ul>
+            <p className="sheet-hint">
+              {saved.length === 0
+                ? "As cidades que você buscar ficam salvas aqui automaticamente."
+                : "As cidades que você busca ficam salvas aqui. Toque em uma para ver a previsão."}
+            </p>
           </>
         )}
       </div>
     </dialog>
+  );
+}
+
+interface CardProps {
+  place: SavedPlace;
+  summary: PlaceSummary | undefined;
+  now: number;
+  active: boolean;
+  onSelect: () => void;
+  onRemove?: () => void;
+}
+
+/** One city in the list: name, local time, condition and temperatures, over its own sky. */
+function CityCard({ place, summary, now, active, onSelect, onRemove }: CardProps) {
+  const condition = summary ? describeWeather(summary.weatherCode, summary.isDay) : null;
+  const region = place.detail?.split(",")[0];
+  const sub = place.current
+    ? place.name
+    : [summary && formatTime(now, summary.timezone), region].filter(Boolean).join(" · ");
+  return (
+    <li className={`city-card theme-${condition?.theme ?? "cloudy-day"}${active ? " active" : ""}`}>
+      <button
+        type="button"
+        className="city-card-main"
+        onClick={onSelect}
+        aria-current={active ? "true" : undefined}
+      >
+        <span className="city-card-left">
+          <strong className="city-card-name">
+            {place.current && <Navigation size={14} aria-hidden />}
+            {place.current ? "Minha localização" : place.name}
+          </strong>
+          <small>{sub}</small>
+          <span className="city-card-condition">{condition?.label ?? ""}</span>
+        </span>
+        <span className="city-card-right">
+          <span className="city-card-temp">{summary ? formatTemp(summary.temperature) : ""}</span>
+          {summary && (
+            <small>
+              Máx.: {formatTemp(summary.max)} Mín.: {formatTemp(summary.min)}
+            </small>
+          )}
+        </span>
+      </button>
+      {onRemove && (
+        <button
+          type="button"
+          className="round-button subtle city-card-remove"
+          onClick={onRemove}
+          aria-label={`Remover ${place.name}`}
+        >
+          <Trash2 size={15} aria-hidden />
+        </button>
+      )}
+    </li>
   );
 }

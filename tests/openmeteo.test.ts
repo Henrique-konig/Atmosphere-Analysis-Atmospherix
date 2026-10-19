@@ -6,6 +6,7 @@ const {
   currentHourIndex,
   fetchForecast,
   fetchPrecipitationGrid,
+  fetchSummaries,
   fetchTemperatureAverages,
   HOURS_AHEAD,
   OpenMeteoError,
@@ -100,6 +101,18 @@ describe("fetchForecast", () => {
     expect(f.daily.precipitationSum).toEqual([null]);
   });
 
+  it("keeps every hour from local midnight for the day details", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json(payload)),
+    );
+    const f = await fetchForecast(0, 0);
+    expect(f.dayHours.time).toHaveLength(hours);
+    expect(f.dayHours.time[0]).toBe(t0);
+    expect(f.dayHours.temperature[5]).toBe(25);
+    expect(f.dayHours.isDay[1]).toBe(true);
+  });
+
   it("fills current UV, visibility and dew point from the current hour", async () => {
     vi.stubGlobal(
       "fetch",
@@ -121,6 +134,47 @@ describe("fetchForecast", () => {
       vi.fn(async () => json({ reason: "Latitude must be in range" }, 400)),
     );
     await expect(fetchForecast(0, 0)).rejects.toThrow(OpenMeteoError);
+  });
+});
+
+describe("fetchSummaries", () => {
+  it("returns one summary per place, in order", async () => {
+    const loc = (temp: number, tz: string) => ({
+      latitude: 0,
+      longitude: 0,
+      elevation: 0,
+      timezone: tz,
+      current: { time: 100, temperature_2m: temp, weather_code: 3, is_day: 0 },
+      daily: { time: [0], temperature_2m_max: [temp + 5], temperature_2m_min: [null] },
+    });
+    const fetchMock = vi.fn(async () =>
+      json([loc(20, "America/Sao_Paulo"), loc(5, "Europe/Lisbon")]),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const list = await fetchSummaries([
+      { lat: -30.0346, lon: -51.2177 },
+      { lat: 38.7, lon: -9.1 },
+    ]);
+
+    const url = new URL(String(fetchMock.mock.calls[0]));
+    expect(url.searchParams.get("latitude")).toBe("-30.035,38.7");
+    expect(list).toHaveLength(2);
+    expect(list[0]).toMatchObject({ temperature: 20, max: 25, min: null, isDay: false });
+    expect(list[1].timezone).toBe("Europe/Lisbon");
+  });
+
+  it("rejects a response with the wrong number of places", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ latitude: 0, longitude: 0, elevation: 0, timezone: "GMT" })),
+    );
+    await expect(
+      fetchSummaries([
+        { lat: 0, lon: 0 },
+        { lat: 1, lon: 1 },
+      ]),
+    ).rejects.toThrow(OpenMeteoError);
   });
 });
 
