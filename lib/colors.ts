@@ -25,47 +25,6 @@ export const PRECIPITATION_SCALE: ColorStop[] = [
   [30, [200, 20, 160, 240]],
 ];
 
-/** Cloud cover (%): clear sky is transparent, overcast is opaque white. */
-export const CLOUDS_SCALE: ColorStop[] = [
-  [0, [255, 255, 255, 0]],
-  [20, [230, 236, 245, 40]],
-  [50, [220, 226, 236, 120]],
-  [80, [235, 238, 244, 200]],
-  [100, [250, 250, 252, 235]],
-];
-
-/** Wind gusts (km/h). */
-export const GUSTS_SCALE: ColorStop[] = [
-  [0, [60, 90, 160, 255]],
-  [20, [40, 160, 200, 255]],
-  [40, [70, 190, 110, 255]],
-  [60, [240, 210, 50, 255]],
-  [80, [240, 130, 30, 255]],
-  [100, [215, 40, 50, 255]],
-  [130, [150, 20, 120, 255]],
-];
-
-/** Mean sea level pressure (hPa): lows in purple/blue, highs in orange/red. */
-export const PRESSURE_SCALE: ColorStop[] = [
-  [970, [110, 40, 150, 255]],
-  [990, [50, 100, 200, 255]],
-  [1005, [60, 170, 190, 255]],
-  [1013, [130, 200, 130, 255]],
-  [1020, [230, 210, 90, 255]],
-  [1030, [235, 140, 50, 255]],
-  [1045, [200, 50, 50, 255]],
-];
-
-/** Relative humidity (%): dry in brown, saturated in blue. */
-export const HUMIDITY_SCALE: ColorStop[] = [
-  [0, [160, 100, 40, 255]],
-  [30, [210, 170, 80, 255]],
-  [50, [190, 210, 120, 255]],
-  [70, [80, 190, 160, 255]],
-  [90, [40, 120, 210, 255]],
-  [100, [30, 70, 180, 255]],
-];
-
 export function colorAt(scale: ColorStop[], value: number): [number, number, number, number] {
   if (!Number.isFinite(value)) return [0, 0, 0, 0];
   if (value <= scale[0][0]) return scale[0][1];
