@@ -8,6 +8,7 @@ import {
   formatTemp,
   formatTime,
   formatWeekday,
+  formatRain,
 } from "@/lib/format";
 import { moonInfo, SYNODIC_MONTH } from "@/lib/moon";
 
@@ -93,5 +94,15 @@ describe("format", () => {
     expect(formatTemp(0)).toBe("0°");
     expect(formatNumber(null, 1)).toBe("—");
     expect(formatNumber(2.345, 1)).toBe("2.3");
+  });
+});
+
+describe("formatRain", () => {
+  it("rounds hourly rain the pt-BR way", () => {
+    expect(formatRain(null)).toBe("—");
+    expect(formatRain(0)).toBe("0");
+    expect(formatRain(0.02)).toBe("0");
+    expect(formatRain(0.4)).toBe("0,4");
+    expect(formatRain(12.6)).toBe("13");
   });
 });

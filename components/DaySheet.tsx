@@ -30,6 +30,7 @@ import {
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import DayChart from "./DayChart";
+import HourDetails from "./HourDetails";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
@@ -168,7 +169,6 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                 {d.hours.map((i) => {
                   const time = dayHours.time[i];
                   const prob = dayHours.precipitationProbability[i];
-                  const wind = dayHours.windSpeed[i];
                   const past = isToday && time + 3600 <= current.time;
                   return (
                     <li key={time} className={past ? "past" : undefined}>
@@ -181,9 +181,7 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                         {prob != null && prob >= 20 && <span className="hourly-prob">{prob}%</span>}
                       </span>
                       <span className="hourly-temp">{formatTemp(dayHours.temperature[i])}</span>
-                      <span className="hourly-wind">
-                        {wind == null ? MISSING : `${Math.round(wind)} km/h`}
-                      </span>
+                      <HourDetails hourly={dayHours} index={i} />
                     </li>
                   );
                 })}

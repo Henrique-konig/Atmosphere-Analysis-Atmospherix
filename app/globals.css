@@ -1189,10 +1189,38 @@ a {
   opacity: 0.7;
 }
 
-.hourly-wind {
-  font-size: 0.7rem;
+.hourly-details {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding-top: 6px;
+  border-top: 1px solid var(--divider);
+  align-self: stretch;
+  font-size: 0.68rem;
+  line-height: 1.2;
   color: var(--muted);
   white-space: nowrap;
+}
+
+.hourly-wind,
+.hourly-rain {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.hourly-wind-arrow {
+  flex: none;
+}
+
+.hourly-gust {
+  color: var(--faint);
+}
+
+.hourly-rain.wet {
+  color: #7cc8ff;
+  font-weight: 600;
 }
 
 .hourly-strip li.past {
