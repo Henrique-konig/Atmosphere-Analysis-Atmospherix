@@ -3,6 +3,7 @@ import { describeWeather } from "@/lib/conditions";
 import { formatHour, formatTemp, formatTime, present } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
+import HourDetails from "./HourDetails";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
@@ -64,6 +65,7 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
                   item.index === 0 ? current.temperature : hourly.temperature[item.index],
                 )}
               </span>
+              <HourDetails hourly={hourly} index={item.index} />
             </li>
           ) : (
             <li key={`s${item.time}`} className="hourly-sun">

@@ -65,3 +65,10 @@ export const formatNumber = (v: number | null, digits = 0) =>
 
 /** The values of a series that the model actually provided. */
 export const present = (values: (number | null)[]) => values.filter((v): v is number => v != null);
+
+/** Hourly rain in mm, pt-BR style: "0", "0,4", "12". */
+export function formatRain(mm: number | null): string {
+  if (mm == null) return MISSING;
+  if (mm < 0.05) return "0";
+  return mm < 10 ? mm.toFixed(1).replace(".", ",") : String(Math.round(mm));
+}
