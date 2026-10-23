@@ -1553,34 +1553,79 @@ a {
   }
 }
 
-/* Offline: the forecast on screen is a saved copy */
-.offline-banner {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  width: fit-content;
-  max-width: 100%;
-  margin: 0 auto 8px;
-  padding: 6px 6px 6px 14px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  font-size: 0.85rem;
+/* Air quality and UV */
+.air {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  column-gap: 20px;
 }
 
-.offline-banner strong {
+.air .card-title {
+  grid-column: 1 / -1;
+}
+
+.air-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.aqi-bar {
+  position: relative;
+  height: 5px;
+  margin: 12px 0 4px;
+  border-radius: 3px;
+  /* 0–50 good, 51–100 moderate, 101–150 sensitive, 151–200 unhealthy, 201–300 very unhealthy. */
+  background: linear-gradient(
+    90deg,
+    #34c759,
+    #34c759 14%,
+    #ffd60a 22%,
+    #ff9f0a 42%,
+    #ff453a 58%,
+    #bf5af2 80%,
+    #a2554f
+  );
+}
+
+.hourly-uv,
+.hourly-aqi {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.uv-moderate,
+.aqi-moderate {
+  color: #ffd60a;
+}
+
+.uv-high,
+.aqi-sensitive {
+  color: #ff9f0a;
   font-weight: 600;
 }
 
-.offline-banner button {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
-  color: var(--text);
-  cursor: pointer;
+.uv-very-high,
+.aqi-unhealthy {
+  color: #ff6961;
+  font-weight: 600;
+}
+
+.uv-extreme,
+.aqi-very-unhealthy,
+.aqi-hazardous {
+  color: #d58cff;
+  font-weight: 600;
+}
+
+@media (max-width: 420px) {
+  .air {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .air-rows {
+    margin-top: 10px;
+  }
 }

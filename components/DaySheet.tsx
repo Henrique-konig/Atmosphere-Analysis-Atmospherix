@@ -5,6 +5,7 @@ import {
   Clock,
   Droplet,
   Gauge,
+  Leaf,
   Sun,
   Sunrise,
   Thermometer,
@@ -13,7 +14,8 @@ import {
   X,
 } from "lucide-react";
 import { useEffect, useRef } from "react";
-import { describeWeather, uvLevel } from "@/lib/conditions";
+import { aqiAt, aqiRange } from "@/lib/airquality";
+import { aqiLevel, describeWeather, uvLevel } from "@/lib/conditions";
 import { dayDetails, daySummary } from "@/lib/day";
 import {
   compassPoint,
@@ -27,7 +29,7 @@ import {
   formatWeekday,
   MISSING,
 } from "@/lib/format";
-import type { Forecast } from "@/lib/types";
+import type { AirQuality, Forecast } from "@/lib/types";
 import Card from "./Card";
 import DayChart from "./DayChart";
 import HourDetails from "./HourDetails";
@@ -37,6 +39,7 @@ import WeatherIcon from "./WeatherIcon";
 
 interface Props {
   forecast: Forecast;
+  airQuality: AirQuality | null;
   /** Index into the daily forecast, or null when closed. */
   day: number | null;
   onSelectDay: (day: number) => void;
@@ -51,7 +54,7 @@ const fromTo = (lo: number, hi: number, unit: string) =>
     : `${Math.round(lo)}–${Math.round(hi)}${unit}`;
 
 /** Full-screen details of one forecast day, like tapping a day in the iPhone Weather app. */
-export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props) {
+export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClose }: Props) {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const stripRef = useRef<HTMLOListElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
@@ -75,6 +78,7 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
 
   const d = day === null ? null : dayDetails(forecast, day);
   const isToday = day === 0;
+  const air = d ? aqiRange(airQuality, d.start, d.end) : null;
 
   return (
     <dialog
@@ -182,7 +186,11 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                         {prob != null && prob >= 20 && <span className="hourly-prob">{prob}%</span>}
                       </span>
                       <span className="hourly-temp">{formatTemp(dayHours.temperature[i])}</span>
-                      <HourDetails hourly={dayHours} index={i} />
+                      <HourDetails
+                        hourly={dayHours}
+                        index={i}
+                        aqi={airQuality ? aqiAt(airQuality, time) : undefined}
+                      />
                     </li>
                   );
                 })}
@@ -249,32 +257,38 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                   : "Pressão média do dia."}
               </p>
             </Card>
-            <Card title="Sol e Lua" icon={Sunrise} className="day-tile tile-wide moon">
-              <div className="moon-body">
-                <MoonDisc phase={d.moon.phase} latitude={forecast.latitude} label={d.moon.name} />
-                <dl className="wind-rows">
-                  <div>
-                    <dt>Nascer do sol</dt>
-                    <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
-                  </div>
-                  <div>
-                    <dt>Pôr do sol</dt>
-                    <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
-                  </div>
-                  <div>
-                    <dt>Duração do dia</dt>
-                    <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
-                  </div>
-                  <div>
-                    <dt>Lua</dt>
-                    <dd>{d.moon.name}</dd>
-                  </div>
-                  <div>
-                    <dt>Iluminação</dt>
-                    <dd>{Math.round(d.moon.illumination * 100)}%</dd>
-                  </div>
-                </dl>
-              </div>
+            <Card title="Qualidade do ar" icon={Leaf} className="day-tile tile-wide">
+              <dl className="wind-rows">
+                <div>
+                  <dt>Pior momento</dt>
+                  <dd>{air ? `${Math.round(air.max)} · ${aqiLevel(air.max).label}` : MISSING}</dd>
+                </div>
+                <div>
+                  <dt>Melhor momento</dt>
+                  <dd>{air ? `${Math.round(air.min)} · ${aqiLevel(air.min).label}` : MISSING}</dd>
+                </div>
+              </dl>
+              <p className="tile-text">
+                {air
+                  ? "Índice de qualidade do ar (escala americana), pelas previsões por hora."
+                  : "A previsão de qualidade do ar cobre só os próximos 5 dias."}
+              </p>
+            </Card>
+            <Card title="Sol" icon={Sunrise} className="day-tile tile-wide">
+              <dl className="wind-rows">
+                <div>
+                  <dt>Nascer</dt>
+                  <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
+                </div>
+                <div>
+                  <dt>Pôr do sol</dt>
+                  <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
+                </div>
+                <div>
+                  <dt>Duração do dia</dt>
+                  <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
+                </div>
+              </dl>
             </Card>
           </div>
         </div>

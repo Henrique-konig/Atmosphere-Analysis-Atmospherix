@@ -2,6 +2,7 @@ import "server-only";
 import { gridPoints, round } from "./grid";
 import { averageForDate } from "./averages";
 import type {
+  AirQuality,
   CurrentConditions,
   DailyForecast,
   Forecast,
@@ -15,6 +16,8 @@ import type {
 const FORECAST_URL = process.env.OPEN_METEO_URL ?? "https://api.open-meteo.com/v1/forecast";
 const ARCHIVE_URL =
   process.env.OPEN_METEO_ARCHIVE_URL ?? "https://archive-api.open-meteo.com/v1/archive";
+const AIR_QUALITY_URL =
+  process.env.OPEN_METEO_AIR_QUALITY_URL ?? "https://air-quality-api.open-meteo.com/v1/air-quality";
 
 /** Model runs update every few hours; caching avoids burning the API quota. */
 const FORECAST_REVALIDATE = 60 * 15;
@@ -182,6 +185,36 @@ function hourlySlice(series: Series & { time: number[] }, from: number, to?: num
   hourly.time = series.time.slice(from, to);
   hourly.isDay = hourly.isDay.map(Boolean);
   return hourly;
+}
+
+/** Current US AQI and pollutants, plus the hourly AQI for the forecast days the model covers. */
+export async function fetchAirQuality(lat: number, lon: number): Promise<AirQuality | null> {
+  const loc = await request<OpenMeteoLocation>(
+    AIR_QUALITY_URL,
+    {
+      latitude: String(round(lat, 2)),
+      longitude: String(round(lon, 2)),
+      current: "us_aqi,pm2_5,pm10,ozone,nitrogen_dioxide",
+      hourly: "us_aqi",
+      timeformat: "unixtime",
+      timezone: "auto",
+      forecast_days: "5",
+    },
+    FORECAST_REVALIDATE,
+  );
+  if (!loc.current || !loc.hourly) return null;
+  const c = loc.current;
+  return {
+    current: {
+      time: c.time,
+      aqi: c.us_aqi ?? null,
+      pm25: c.pm2_5 ?? null,
+      pm10: c.pm10 ?? null,
+      ozone: c.ozone ?? null,
+      nitrogenDioxide: c.nitrogen_dioxide ?? null,
+    },
+    hourly: { time: loc.hourly.time, aqi: column(loc.hourly, "us_aqi") },
+  };
 }
 
 /** Most places one city-list request may ask for. */
