@@ -1,9 +1,19 @@
 "use client";
 
-import { Download, LoaderCircle, Navigation, RefreshCw, Search, Star } from "lucide-react";
+import {
+  Bell,
+  BellRing,
+  Download,
+  LoaderCircle,
+  Navigation,
+  RefreshCw,
+  Search,
+  Star,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { useWeatherNotifications } from "@/hooks/useWeatherNotifications";
 import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
 import { detectRisks, isSevereWeather } from "@/lib/risks";
@@ -23,6 +33,7 @@ import DailyCard from "./DailyCard";
 import DaySheet from "./DaySheet";
 import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
+import NotificationSheet from "./NotificationSheet";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
@@ -98,6 +109,7 @@ export default function WeatherScreen() {
   const [locateError, setLocateError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [day, setDay] = useState<number | null>(null);
+  const [notifyOpen, setNotifyOpen] = useState(false);
   const { canInstall, install } = useInstallPrompt();
 
   const choose = useCallback((next: SavedPlace) => {
@@ -171,6 +183,18 @@ export default function WeatherScreen() {
   const { data, error, loading, savedAt, stale, offline, refresh } = useForecast(coords);
   const forecast = data?.forecast;
 
+  const notifyPlace = useMemo(
+    () =>
+      place
+        ? { key: `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`, name: place.name }
+        : null,
+    [place],
+  );
+  const notifications = useWeatherNotifications(forecast, notifyPlace);
+  const notifying =
+    notifications.permission === "granted" &&
+    (notifications.settings.rain || notifications.settings.severe);
+
   const risks = useMemo(() => (forecast ? detectRisks(forecast) : []), [forecast]);
   const severe = risks.filter(isSevereWeather);
   const otherRisks = risks.filter((r) => !isSevereWeather(r));
@@ -186,6 +210,15 @@ export default function WeatherScreen() {
             <Download size={16} aria-hidden /> Instalar app
           </button>
         )}
+        <button
+          type="button"
+          className={`round-button notify-button${notifying ? " on" : ""}`}
+          onClick={() => setNotifyOpen(true)}
+          aria-label={notifying ? "Avisos ativados" : "Avisos"}
+          title="Avisos"
+        >
+          {notifying ? <BellRing size={18} aria-hidden /> : <Bell size={18} aria-hidden />}
+        </button>
         <button
           type="button"
           className="round-button"
@@ -317,6 +350,16 @@ export default function WeatherScreen() {
           />
         </>
       )}
+
+      <NotificationSheet
+        open={notifyOpen}
+        placeName={place?.name ?? null}
+        settings={notifications.settings}
+        permission={notifications.permission}
+        onChange={(next) => void notifications.update(next)}
+        onTest={() => void notifications.sendTest()}
+        onClose={() => setNotifyOpen(false)}
+      />
 
       <CitySheet
         open={sheetOpen}

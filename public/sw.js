@@ -1,4 +1,5 @@
-// Service worker: makes the app installable and keeps the last forecast available offline.
+// Service worker: makes the app installable, keeps the last forecast available offline and
+// opens the app from its weather notifications.
 const VERSION = "v2";
 const SHELL = `atmospherix-shell-${VERSION}`;
 const RUNTIME = `atmospherix-runtime-${VERSION}`;
@@ -73,4 +74,16 @@ self.addEventListener("fetch", (event) => {
   } else if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
     event.respondWith(cacheFirst(request));
   }
+});
+
+/** Tapping a notification brings the open app forward, or opens it. */
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const url = new URL(event.notification.data?.url ?? "/", self.location.origin).href;
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((windows) => {
+      const open = windows.find((w) => new URL(w.url).origin === self.location.origin);
+      return open ? open.focus() : self.clients.openWindow(url);
+    }),
+  );
 });
