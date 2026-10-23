@@ -875,6 +875,52 @@ a {
   top: 10px;
 }
 
+.rain-map-kind {
+  position: absolute;
+  z-index: 500;
+  top: 10px;
+  left: 10px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  background: rgba(10, 16, 28, 0.72);
+  color: #fff;
+  pointer-events: none;
+}
+
+.rain-map-kind.radar {
+  color: #7fe0ff;
+}
+
+.rain-map-kind.forecast {
+  color: #ffd66b;
+}
+
+/* Keep the badge clear of the kind pill on narrow screens. */
+.rain-map-kind ~ .rain-map-badge {
+  top: 40px;
+}
+
+.rain-map-track {
+  position: relative;
+  flex: 1;
+  display: flex;
+}
+
+.rain-map-now {
+  position: absolute;
+  top: -6px;
+  width: 2px;
+  height: 6px;
+  margin-left: -1px;
+  border-radius: 1px;
+  background: var(--muted);
+  pointer-events: none;
+}
+
 .rain-map-controls {
   display: flex;
   align-items: center;
@@ -888,7 +934,7 @@ a {
 }
 
 .rain-map-time {
-  min-width: 52px;
+  min-width: 56px;
   text-align: right;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
