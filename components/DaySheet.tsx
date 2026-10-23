@@ -33,6 +33,7 @@ import type { AirQuality, Forecast } from "@/lib/types";
 import Card from "./Card";
 import DayChart from "./DayChart";
 import HourDetails from "./HourDetails";
+import MoonDisc from "./MoonDisc";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
@@ -239,7 +240,11 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
               <p className="tile-value">
                 {d.humidity ? fromTo(d.humidity.min, d.humidity.max, "%") : MISSING}
               </p>
-              <p className="tile-text">Umidade relativa ao longo do dia.</p>
+              <p className="tile-text">
+                {d.dewPoint
+                  ? `Ponto de orvalho de ${fromTo(d.dewPoint.min, d.dewPoint.max, "°")}.`
+                  : "Umidade relativa ao longo do dia."}
+              </p>
             </Card>
             <Card title="Pressão" icon={Gauge} className="day-tile">
               <p className="tile-value">

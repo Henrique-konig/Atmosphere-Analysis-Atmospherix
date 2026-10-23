@@ -1,5 +1,5 @@
 // Service worker: makes the app installable and keeps the last forecast available offline.
-const VERSION = "v1";
+const VERSION = "v2";
 const SHELL = `atmospherix-shell-${VERSION}`;
 const RUNTIME = `atmospherix-runtime-${VERSION}`;
 const PRECACHE = ["/", "/icons/icon-192.png", "/icons/icon-512.png"];
@@ -22,12 +22,26 @@ self.addEventListener("activate", (event) => {
   );
 });
 
+/** A copy stamped with the time it was fetched, so the page can say how old it is. */
+async function stamped(response) {
+  const headers = new Headers(response.headers);
+  headers.set("x-atmospherix-saved-at", String(Date.now()));
+  return new Response(await response.blob(), {
+    status: response.status,
+    statusText: response.statusText,
+    headers,
+  });
+}
+
 /** Fresh data when online; the last saved copy when offline. */
-async function networkFirst(request, fallbackUrl) {
+async function networkFirst(request, fallbackUrl, stamp = false) {
   const cache = await caches.open(RUNTIME);
   try {
     const response = await fetch(request);
-    if (response.ok) cache.put(request, response.clone());
+    if (response.ok) {
+      const copy = response.clone();
+      (stamp ? stamped(copy) : Promise.resolve(copy)).then((r) => cache.put(request, r));
+    }
     return response;
   } catch (err) {
     const cached =
@@ -55,7 +69,7 @@ self.addEventListener("fetch", (event) => {
   if (request.mode === "navigate") {
     event.respondWith(networkFirst(request, "/"));
   } else if (url.pathname.startsWith("/api/")) {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirst(request, undefined, true));
   } else if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icons/")) {
     event.respondWith(cacheFirst(request));
   }

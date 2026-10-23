@@ -11,7 +11,7 @@ import {
   formatWeekday,
   formatRain,
 } from "@/lib/format";
-import { moonInfo, SYNODIC_MONTH } from "@/lib/moon";
+import { daysUntil, moonInfo, SYNODIC_MONTH } from "@/lib/moon";
 
 describe("averageForDate", () => {
   it("averages the days within the window across years", () => {
@@ -54,6 +54,12 @@ describe("moonInfo", () => {
 
   it("counts the days to the next full moon", () => {
     expect(moonInfo(newMoon + 86_400 * 5).daysToFull).toBeCloseTo(SYNODIC_MONTH / 2 - 5, 3);
+  });
+
+  it("words the days ahead", () => {
+    expect(daysUntil(0.3)).toBe("Hoje");
+    expect(daysUntil(1.2)).toBe("Amanhã");
+    expect(daysUntil(9.6)).toBe("Em 10 dias");
   });
 });
 

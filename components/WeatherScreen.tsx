@@ -6,7 +6,7 @@ import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
-import { detectRisks } from "@/lib/risks";
+import { detectRisks, isSevereWeather } from "@/lib/risks";
 import {
   loadHere,
   loadLastPlace,
@@ -23,6 +23,7 @@ import DailyCard from "./DailyCard";
 import DaySheet from "./DaySheet";
 import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
+import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
 import AirQualityTile from "./tiles/AirQualityTile";
@@ -166,10 +167,12 @@ export default function WeatherScreen() {
   const favorite = Boolean(place && !place.current && saved.some((p) => samePlace(p, place)));
 
   const coords = place ? { lat: place.latitude, lon: place.longitude } : null;
-  const { data, error, loading, refresh } = useForecast(coords);
+  const { data, error, loading, savedAt, stale, offline, refresh } = useForecast(coords);
   const forecast = data?.forecast;
 
   const risks = useMemo(() => (forecast ? detectRisks(forecast) : []), [forecast]);
+  const severe = risks.filter(isSevereWeather);
+  const otherRisks = risks.filter((r) => !isSevereWeather(r));
   const theme = forecast
     ? describeWeather(forecast.current.weatherCode, forecast.current.isDay).theme
     : "cloudy-day";
@@ -238,6 +241,9 @@ export default function WeatherScreen() {
         </div>
       ) : (
         <>
+          {stale && savedAt && (
+            <OfflineBanner savedAt={savedAt} offline={offline} onRetry={refresh} />
+          )}
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
           <div className={`layout${loading ? " refreshing" : ""}`}>
             <RiskBanner risks={risks} timezone={forecast.timezone} now={forecast.current.time} />

@@ -3,19 +3,28 @@
 import "leaflet/dist/leaflet.css";
 
 import { CloudRain, Pause, Play } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type * as Leaflet from "leaflet";
+import { useRadarFrames } from "@/hooks/useRadarFrames";
 import { useRainGrid } from "@/hooks/useRainGrid";
 import { BASEMAP } from "@/lib/basemap";
 import { cssGradient, PRECIPITATION_SCALE } from "@/lib/colors";
-import { formatHour } from "@/lib/format";
+import { formatHour, formatTime } from "@/lib/format";
 import { gridStep } from "@/lib/grid";
+import {
+  buildTimeline,
+  RADAR_ATTRIBUTION,
+  RADAR_LEGEND_GRADIENT,
+  RADAR_MAX_ZOOM,
+  type TimelineFrame,
+} from "@/lib/radar";
 import { renderField } from "@/lib/raster";
 import Card from "./Card";
 
 /** Overlay pixels per grid cell; higher is smoother but slower. */
 const UPSAMPLE = 10;
-const PLAY_INTERVAL_MS = 800;
+const PLAY_INTERVAL_MS = 700;
+const RADAR_OPACITY = 0.8;
 
 interface Props {
   latitude: number;
@@ -27,17 +36,29 @@ interface Handles {
   L: typeof Leaflet;
   map: Leaflet.Map;
   overlay: Leaflet.ImageOverlay | null;
+  radar: Leaflet.TileLayer[];
+}
+
+function frameLabel(frame: TimelineFrame, isNow: boolean, timezone: string): string {
+  if (isNow) return "Agora";
+  return frame.kind === "radar"
+    ? formatTime(frame.time, timezone)
+    : formatHour(frame.time, timezone);
 }
 
 export default function RainMap({ latitude, longitude, timezone }: Props) {
   const rain = useRainGrid({ lat: latitude, lon: longitude });
-  const [step, setStep] = useState(0);
+  const radar = useRadarFrames();
+  /** null follows "now" as data arrives; a number is a frame the user picked. */
+  const [step, setStep] = useState<number | null>(null);
   const [playing, setPlaying] = useState(false);
   const [ready, setReady] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const handles = useRef<Handles | null>(null);
-  const steps = rain?.times.length ?? 0;
-  const current = Math.min(step, Math.max(0, steps - 1));
+  const timeline = useMemo(() => buildTimeline(radar ?? [], rain?.times ?? []), [radar, rain]);
+  const steps = timeline.frames.length;
+  const current = Math.min(step ?? timeline.now, Math.max(0, steps - 1));
+  const frame = timeline.frames[current] as TimelineFrame | undefined;
 
   useEffect(() => {
     let cancelled = false;
@@ -70,7 +91,7 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
         fillOpacity: 1,
         pane: "labels",
       }).addTo(map);
-      handles.current = { L, map, overlay: null };
+      handles.current = { L, map, overlay: null, radar: [] };
       setReady(true);
     })();
     return () => {
@@ -81,10 +102,42 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
     };
   }, [latitude, longitude]);
 
+  // One tile layer per radar frame, all added up front so their tiles preload; only the
+  // current one is visible.
   useEffect(() => {
     const h = handles.current;
-    if (!ready || !h || !rain) return;
-    const field = rain.precipitation[current];
+    if (!ready || !h || !radar?.length) return;
+    const layers = radar.map((f) =>
+      h.L.tileLayer(f.url, {
+        tileSize: 512,
+        zoomOffset: -1,
+        maxNativeZoom: RADAR_MAX_ZOOM + 1,
+        maxZoom: BASEMAP.maxZoom,
+        opacity: 0,
+        zIndex: 10,
+        attribution: RADAR_ATTRIBUTION,
+      }).addTo(h.map),
+    );
+    h.radar = layers;
+    return () => {
+      layers.forEach((layer) => layer.remove());
+      h.radar = [];
+    };
+  }, [ready, radar]);
+
+  useEffect(() => {
+    const h = handles.current;
+    if (!ready || !h) return;
+    h.radar.forEach((layer, i) =>
+      layer.setOpacity(frame?.kind === "radar" && frame.radar === i ? RADAR_OPACITY : 0),
+    );
+    h.overlay?.setOpacity(frame?.kind === "forecast" ? 0.9 : 0);
+  }, [ready, radar, frame]);
+
+  useEffect(() => {
+    const h = handles.current;
+    if (!ready || !h || !rain || frame?.kind !== "forecast") return;
+    const field = rain.precipitation[frame.forecast];
     if (!field) return;
     const { nx, ny, bbox } = rain.grid;
     const width = (nx - 1) * UPSAMPLE + 1;
@@ -105,67 +158,99 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
     if (h.overlay) {
       h.overlay.setUrl(url);
       h.overlay.setBounds(bounds);
+      h.overlay.setOpacity(0.9);
     } else {
       h.overlay = h.L.imageOverlay(url, bounds, { opacity: 0.9, interactive: false }).addTo(h.map);
     }
-  }, [ready, rain, current]);
+  }, [ready, rain, frame]);
 
   useEffect(() => {
     if (!playing || steps === 0) return;
-    const id = window.setInterval(() => setStep((s) => (s + 1) % steps), PLAY_INTERVAL_MS);
+    const id = window.setInterval(
+      () => setStep((s) => ((s ?? timeline.now) + 1) % steps),
+      PLAY_INTERVAL_MS,
+    );
     return () => window.clearInterval(id);
-  }, [playing, steps]);
+  }, [playing, steps, timeline.now]);
 
-  const totalNow = rain ? Math.max(...rain.precipitation[current]) : 0;
+  const noRainForecast =
+    frame?.kind === "forecast" &&
+    rain != null &&
+    Math.max(...rain.precipitation[frame.forecast]) < 0.1;
+  const hasRadar = (radar?.length ?? 0) > 0;
+  const label = frame ? frameLabel(frame, current === timeline.now, timezone) : "";
 
   return (
-    <Card title="Previsão de chuva" icon={CloudRain} className="rain-map">
+    <Card
+      title={hasRadar ? "Radar de chuva" : "Previsão de chuva"}
+      icon={CloudRain}
+      className="rain-map"
+    >
       <p className="card-summary">
-        Previsão do modelo para a região, não é radar. Pancadas isoladas podem não aparecer.
+        {hasRadar
+          ? "Radar das últimas 2 horas e, em seguida, a previsão do modelo para as próximas horas."
+          : "Previsão do modelo para a região, não é radar. Pancadas isoladas podem não aparecer."}
       </p>
       <div className="rain-map-frame">
         <div
           ref={containerRef}
           className="rain-map-canvas"
-          aria-label="Mapa da previsão de chuva da região"
+          aria-label="Mapa de radar e previsão de chuva da região"
         />
-        {!rain && <div className="rain-map-status">Carregando…</div>}
-        {rain && totalNow < 0.1 && (
-          <div className="rain-map-badge">Sem chuva prevista na região</div>
+        {steps === 0 && <div className="rain-map-status">Carregando…</div>}
+        {frame && (
+          <div className={`rain-map-kind ${frame.kind}`}>
+            {frame.kind === "radar" ? "Radar" : "Previsão"}
+          </div>
         )}
+        {noRainForecast && <div className="rain-map-badge">Sem chuva prevista na região</div>}
       </div>
-      {rain && steps > 0 && (
+      {frame && (
         <div className="rain-map-controls">
           <button
             type="button"
             className="round-button"
-            onClick={() => setPlaying((p) => !p)}
-            aria-label={playing ? "Pausar" : "Animar próximas horas"}
+            onClick={() => {
+              // Start from the oldest radar image so the animation tells the whole story.
+              if (!playing && current === timeline.now && hasRadar) setStep(0);
+              setPlaying((p) => !p);
+            }}
+            aria-label={playing ? "Pausar" : "Animar radar e próximas horas"}
           >
             {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
           </button>
-          <input
-            type="range"
-            min={0}
-            max={steps - 1}
-            value={current}
-            onChange={(e) => {
-              setPlaying(false);
-              setStep(Number(e.target.value));
-            }}
-            aria-label="Hora da previsão de chuva"
-            aria-valuetext={current === 0 ? "Agora" : formatHour(rain.times[current], timezone)}
-          />
-          <span className="rain-map-time">
-            {current === 0 ? "Agora" : formatHour(rain.times[current], timezone)}
-          </span>
+          <div className="rain-map-track">
+            <input
+              type="range"
+              min={0}
+              max={steps - 1}
+              value={current}
+              onChange={(e) => {
+                setPlaying(false);
+                setStep(Number(e.target.value));
+              }}
+              aria-label="Momento do radar ou da previsão de chuva"
+              aria-valuetext={`${frame.kind === "radar" ? "Radar" : "Previsão"} ${label}`}
+            />
+            {hasRadar && steps > 1 && (
+              <div
+                className="rain-map-now"
+                style={{ left: `${(timeline.now / (steps - 1)) * 100}%` }}
+                aria-hidden
+              />
+            )}
+          </div>
+          <span className="rain-map-time">{label}</span>
         </div>
       )}
       <div className="rain-legend">
         <span>Fraca</span>
         <span
           className="rain-legend-bar"
-          style={{ background: cssGradient(PRECIPITATION_SCALE) }}
+          style={{
+            background:
+              frame?.kind === "radar" ? RADAR_LEGEND_GRADIENT : cssGradient(PRECIPITATION_SCALE),
+          }}
         />
         <span>Forte</span>
       </div>

@@ -15,6 +15,7 @@ function threeDays() {
       temperature,
       apparentTemperature: time.map((_, i) => (i < 24 ? 18 + (i % 24) / 4 : 25)),
       humidity: time.map((_, i) => 50 + (i % 24)),
+      dewPoint: time.map((_, i) => 10 + (i % 24) / 2),
       pressure: time.map(() => 1012),
     },
     daily: {
@@ -40,6 +41,7 @@ describe("dayDetails", () => {
     expect(d.feelsLike).toEqual({ min: 18, max: 23.75 });
     expect(d.humidity).toEqual({ min: 50, max: 73 });
     expect(d.pressure).toEqual({ min: 1012, max: 1012 });
+    expect(d.dewPoint).toEqual({ min: 10, max: 21.5 });
     expect(d.warmestHour).toBe(d.start + 15 * 3600);
   });
 
@@ -50,6 +52,14 @@ describe("dayDetails", () => {
     expect(d.hours).toEqual([]);
     expect(d.feelsLike).toBeNull();
     expect(d.warmestHour).toBeNull();
+  });
+
+  it("has the moon at midday of the day", () => {
+    const f = threeDays();
+    const d = dayDetails(f, 0);
+    expect(d.moon.name).toBe("Quarto crescente");
+    // The moon waxes from one day to the next.
+    expect(dayDetails(f, 1).moon.illumination).toBeGreaterThan(d.moon.illumination);
   });
 });
 
@@ -65,6 +75,13 @@ describe("daySummary", () => {
   it("says when no rain is expected", () => {
     const f = threeDays();
     expect(daySummary(dayDetails(f, 1), f.timezone)).toContain("Sem chuva prevista.");
+  });
+
+  it("mentions a full moon", () => {
+    const f = threeDays();
+    // 2026-10-26 is a full moon.
+    f.daily.time = [Date.UTC(2026, 9, 26, 3) / 1000];
+    expect(daySummary(dayDetails(f, 0), f.timezone)).toContain("Lua cheia.");
   });
 
   it("leaves rain out when it is unknown", () => {
