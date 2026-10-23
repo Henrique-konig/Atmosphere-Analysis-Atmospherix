@@ -1336,6 +1336,245 @@ a {
   opacity: 0.7;
 }
 
+/* Charts: temperature, rain and wind over the hours or the days */
+.trends {
+  --tone-temp: #ffb340;
+  --tone-feels: rgba(255, 255, 255, 0.75);
+  --tone-max: #ff9f0a;
+  --tone-min: #64d2ff;
+  --tone-rain: #7cc8ff;
+  --tone-chance: rgba(255, 255, 255, 0.8);
+  --tone-wind: #5de4c7;
+  --tone-gust: rgba(255, 255, 255, 0.75);
+}
+
+.tone-temp {
+  --tone: var(--tone-temp);
+}
+.tone-feels {
+  --tone: var(--tone-feels);
+}
+.tone-max {
+  --tone: var(--tone-max);
+}
+.tone-min {
+  --tone: var(--tone-min);
+}
+.tone-rain {
+  --tone: var(--tone-rain);
+}
+.tone-chance {
+  --tone: var(--tone-chance);
+}
+.tone-wind {
+  --tone: var(--tone-wind);
+}
+.tone-gust {
+  --tone: var(--tone-gust);
+}
+
+.trends-controls {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 2px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.segmented button {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--muted);
+}
+
+.segmented button[aria-pressed="true"] {
+  background: rgba(255, 255, 255, 0.22);
+  color: var(--text);
+}
+
+.trends-readout {
+  min-height: 1.3em;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+
+.trends-chart {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr);
+  column-gap: 6px;
+}
+
+.trends-axis {
+  position: relative;
+  font-size: 0.68rem;
+  color: var(--faint);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.trends-axis span {
+  position: absolute;
+  right: 0;
+  transform: translateY(-50%);
+}
+
+.trends-plot {
+  position: relative;
+  height: 170px;
+  touch-action: pan-y;
+  cursor: crosshair;
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.trends-plot svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.trends-grid {
+  stroke: var(--divider);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+}
+
+.trends-cursor {
+  stroke: rgba(255, 255, 255, 0.45);
+  stroke-width: 1;
+  stroke-dasharray: 3 3;
+  vector-effect: non-scaling-stroke;
+}
+
+.trends-line {
+  fill: none;
+  stroke: var(--tone);
+  stroke-width: 2.5;
+  stroke-linejoin: round;
+  stroke-linecap: round;
+  vector-effect: non-scaling-stroke;
+}
+
+.trends-line.dashed {
+  stroke-width: 1.5;
+  stroke-dasharray: 5 4;
+}
+
+.trends-bar {
+  fill: var(--tone);
+  opacity: 0.75;
+}
+
+.trends-dot {
+  position: absolute;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--tone);
+  border: 2px solid rgba(20, 30, 50, 0.9);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.trends-value {
+  position: absolute;
+  transform: translate(-50%, calc(-100% - 5px));
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+  pointer-events: none;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+}
+
+.trends-value.below {
+  transform: translate(-50%, 5px);
+  color: var(--muted);
+}
+
+.trends-ticks,
+.trends-arrows {
+  grid-column: 2;
+  position: relative;
+  height: 20px;
+  margin-top: 4px;
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.trends-ticks span {
+  position: absolute;
+  transform: translateX(-50%);
+  white-space: nowrap;
+}
+
+.trends-ticks span.selected {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.trends-arrows {
+  height: 14px;
+  margin-top: 0;
+  color: var(--tone-wind);
+}
+
+.trends-arrows svg {
+  position: absolute;
+  top: 0;
+}
+
+.trends-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin-top: 10px;
+  list-style: none;
+  font-size: 0.72rem;
+  color: var(--faint);
+}
+
+.trends-legend li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.trends-legend svg {
+  color: var(--tone-wind);
+}
+
+.trends-swatch {
+  width: 14px;
+  height: 0;
+  border-top: 2.5px solid var(--tone);
+}
+
+.trends-swatch.dashed {
+  border-top-style: dashed;
+  border-top-width: 1.5px;
+}
+
+.trends-swatch.bar {
+  width: 10px;
+  height: 10px;
+  border: 0;
+  border-radius: 2px;
+  background: var(--tone);
+}
+
 .hourly-details {
   display: flex;
   flex-direction: column;
