@@ -1,3 +1,4 @@
+import { DEFAULT_SETTINGS, type NotifySettings } from "./notifications";
 import type { Place } from "./types";
 
 /** A place the user picked, or their device location. */
@@ -14,6 +15,8 @@ export interface SavedPlace {
 const SAVED_KEY = "atmospherix:places";
 const LAST_KEY = "atmospherix:last";
 const HERE_KEY = "atmospherix:here";
+const NOTIFY_KEY = "atmospherix:notify";
+const SENT_KEY = "atmospherix:notified";
 
 // Storage can be unavailable (private mode, blocked cookies): never let it throw.
 function read<T>(key: string, fallback: T): T {
@@ -40,6 +43,17 @@ export const storeLastPlace = (place: SavedPlace) => write(LAST_KEY, place);
 /** The last device location, shown as "Minha localização" at the top of the city list. */
 export const loadHere = () => read<SavedPlace | null>(HERE_KEY, null);
 export const storeHere = (place: SavedPlace) => write(HERE_KEY, place);
+
+export const loadNotifySettings = (): NotifySettings => ({
+  ...DEFAULT_SETTINGS,
+  ...read<Partial<NotifySettings>>(NOTIFY_KEY, {}),
+});
+export const storeNotifySettings = (settings: NotifySettings) => write(NOTIFY_KEY, settings);
+/** Tags already notified, with when (unix seconds), so nothing is sent twice. */
+export const loadSentNotices = () =>
+  new Map(Object.entries(read<Record<string, number>>(SENT_KEY, {})));
+export const storeSentNotices = (sent: Map<string, number>) =>
+  write(SENT_KEY, Object.fromEntries(sent));
 
 export function samePlace(a: SavedPlace, b: SavedPlace): boolean {
   return Math.abs(a.latitude - b.latitude) < 0.01 && Math.abs(a.longitude - b.longitude) < 0.01;
