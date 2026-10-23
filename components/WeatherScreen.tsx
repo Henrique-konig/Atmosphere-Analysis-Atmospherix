@@ -27,6 +27,7 @@ import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
 import TrendsCard from "./TrendsCard";
+import AirQualityTile from "./tiles/AirQualityTile";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
 import PrecipitationTile from "./tiles/PrecipitationTile";
