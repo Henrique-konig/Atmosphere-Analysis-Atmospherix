@@ -1,7 +1,8 @@
 import { Clock, Sunrise, Sunset } from "lucide-react";
+import { aqiAt } from "@/lib/airquality";
 import { describeWeather } from "@/lib/conditions";
 import { formatHour, formatTemp, formatTime, present } from "@/lib/format";
-import type { Forecast } from "@/lib/types";
+import type { AirQuality, Forecast } from "@/lib/types";
 import Card from "./Card";
 import HourDetails from "./HourDetails";
 import ScrollStrip from "./ScrollStrip";
@@ -12,7 +13,13 @@ const HOURS = 24;
 type Item =
   { kind: "hour"; time: number; index: number } | { kind: "sun"; time: number; rise: boolean };
 
-export default function HourlyCard({ forecast }: { forecast: Forecast }) {
+export default function HourlyCard({
+  forecast,
+  airQuality,
+}: {
+  forecast: Forecast;
+  airQuality: AirQuality | null;
+}) {
   const { hourly, daily, timezone, current } = forecast;
   const end = hourly.time[Math.min(HOURS, hourly.time.length) - 1] ?? 0;
 
@@ -65,7 +72,11 @@ export default function HourlyCard({ forecast }: { forecast: Forecast }) {
                   item.index === 0 ? current.temperature : hourly.temperature[item.index],
                 )}
               </span>
-              <HourDetails hourly={hourly} index={item.index} />
+              <HourDetails
+                hourly={hourly}
+                index={item.index}
+                aqi={airQuality ? aqiAt(airQuality, item.time) : undefined}
+              />
             </li>
           ) : (
             <li key={`s${item.time}`} className="hourly-sun">

@@ -35,3 +35,9 @@ export function moonInfo(unixSeconds: number): MoonInfo {
   const daysToNew = ((1 - phase) % 1) * SYNODIC_MONTH;
   return { phase, illumination, name, daysToFull, daysToNew };
 }
+
+/** "Hoje", "Amanhã" or "Em 5 dias", for a number of days ahead. */
+export function daysUntil(days: number): string {
+  const n = Math.round(days);
+  return n === 0 ? "Hoje" : n === 1 ? "Amanhã" : `Em ${n} dias`;
+}

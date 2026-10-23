@@ -4,6 +4,7 @@ vi.mock("server-only", () => ({}));
 
 const {
   currentHourIndex,
+  fetchAirQuality,
   fetchForecast,
   fetchPrecipitationGrid,
   fetchSummaries,
@@ -226,6 +227,47 @@ describe("fetchTemperatureAverages", () => {
     expect(ranges[0]).toBe("2025-10-16..2025-10-22");
     expect(ranges[9]).toBe("2016-10-16..2016-10-22");
     expect(avg).toEqual({ years: 9, max: 24, min: 14 });
+  });
+});
+
+describe("fetchAirQuality", () => {
+  it("maps the current pollutants and the hourly US AQI, keeping gaps as null", async () => {
+    const fetchMock = vi.fn(async () =>
+      json({
+        latitude: 0,
+        longitude: 0,
+        elevation: 0,
+        timezone: "America/Sao_Paulo",
+        current: {
+          time: 3600,
+          us_aqi: 42,
+          pm2_5: 8.4,
+          pm10: 15,
+          ozone: 60,
+          nitrogen_dioxide: null,
+        },
+        hourly: { time: [0, 3600, 7200], us_aqi: [40, 42, null] },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const air = await fetchAirQuality(-30.0346, -51.2177);
+
+    const url = new URL(String(fetchMock.mock.calls[0]));
+    expect(url.pathname).toBe("/v1/air-quality");
+    expect(url.searchParams.get("hourly")).toBe("us_aqi");
+    expect(air).toEqual({
+      current: { time: 3600, aqi: 42, pm25: 8.4, pm10: 15, ozone: 60, nitrogenDioxide: null },
+      hourly: { time: [0, 3600, 7200], aqi: [40, 42, null] },
+    });
+  });
+
+  it("returns null when the model has nothing for the place", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => json({ latitude: 0, longitude: 0, elevation: 0, timezone: "GMT" })),
+    );
+    expect(await fetchAirQuality(0, 0)).toBeNull();
   });
 });
 

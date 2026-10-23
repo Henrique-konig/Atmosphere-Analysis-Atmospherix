@@ -1,9 +1,25 @@
-import { ArrowUp, Droplets } from "lucide-react";
+import { ArrowUp, Droplets, Leaf, Sun } from "lucide-react";
+import { aqiLevel, uvLevel, uvTone } from "@/lib/conditions";
 import { compassPoint, formatRain, MISSING } from "@/lib/format";
 import type { HourlyForecast } from "@/lib/types";
 
-/** Wind (speed, direction, gusts) and rain amount under one hour of the hourly strip. */
-export default function HourDetails({ hourly, index }: { hourly: HourlyForecast; index: number }) {
+/**
+ * Wind (speed, direction, gusts), rain amount, UV index and air quality under one hour of the
+ * hourly strip. `aqi` is undefined when the air quality is not loaded at all, null when the
+ * model has no value for this hour.
+ */
+export default function HourDetails({
+  hourly,
+  index,
+  aqi,
+}: {
+  hourly: HourlyForecast;
+  index: number;
+  aqi?: number | null;
+}) {
+  const uv = hourly.uvIndex[index];
+  const roundedUv = uv == null ? null : Math.round(uv);
+  const air = aqi == null ? null : aqiLevel(aqi);
   const speed = hourly.windSpeed[index];
   const gust = hourly.windGusts[index];
   const direction = hourly.windDirection[index];
@@ -33,6 +49,24 @@ export default function HourDetails({ hourly, index }: { hourly: HourlyForecast;
         <Droplets size={11} aria-hidden />
         {rain == null ? MISSING : `${formatRain(rain)} mm`}
       </span>
+      <span
+        className={roundedUv == null ? "hourly-uv" : `hourly-uv uv-${uvTone(roundedUv)}`}
+        title={
+          roundedUv == null ? "Índice UV" : `Índice UV ${uvLevel(roundedUv).label.toLowerCase()}`
+        }
+      >
+        <Sun size={11} aria-hidden />
+        {roundedUv == null ? MISSING : `UV ${roundedUv}`}
+      </span>
+      {aqi !== undefined && (
+        <span
+          className={air ? `hourly-aqi aqi-${air.tone}` : "hourly-aqi"}
+          title={air ? `Qualidade do ar ${air.label.toLowerCase()}` : "Qualidade do ar"}
+        >
+          <Leaf size={11} aria-hidden />
+          {aqi == null ? MISSING : `IQA ${Math.round(aqi)}`}
+        </span>
+      )}
     </span>
   );
 }

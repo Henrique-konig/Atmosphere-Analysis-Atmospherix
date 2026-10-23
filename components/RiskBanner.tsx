@@ -1,34 +1,22 @@
 import { TriangleAlert } from "lucide-react";
-import { formatHour, formatWeekday } from "@/lib/format";
+import { riskWhen } from "@/lib/risks";
 import type { Risk } from "@/lib/risks";
 
 interface Props {
   risks: Risk[];
+  /** Shown below the severe-weather warning, which already carries the official-alerts note. */
+  afterSevere?: boolean;
   timezone: string;
   now: number;
 }
 
-function when(risk: Risk, now: number, timezone: string): string {
-  const { time } = risk;
-  if (risk.allDay) {
-    if (formatWeekday(time, timezone) === formatWeekday(now, timezone)) return "hoje";
-    if (formatWeekday(time, timezone) === formatWeekday(now + 86_400, timezone)) return "amanhã";
-    return formatWeekday(time, timezone);
-  }
-  if (time <= now + 1800) return "agora";
-  const sameDay = formatWeekday(time, timezone) === formatWeekday(now, timezone);
-  return sameDay
-    ? `a partir das ${formatHour(time, timezone)}`
-    : `${formatWeekday(time, timezone)}, ${formatHour(time, timezone)}`;
-}
-
-export default function RiskBanner({ risks, timezone, now }: Props) {
+export default function RiskBanner({ risks, timezone, now, afterSevere = false }: Props) {
   if (risks.length === 0) return null;
   return (
     <section className="card risks" aria-label="Riscos">
       <h2 className="card-title">
         <TriangleAlert size={14} strokeWidth={2} aria-hidden />
-        Riscos nas próximas 48 horas
+        {afterSevere ? "Outros riscos nas próximas 48 horas" : "Riscos nas próximas 48 horas"}
       </h2>
       <ul>
         {risks.map((risk) => (
@@ -36,15 +24,17 @@ export default function RiskBanner({ risks, timezone, now }: Props) {
             <div className="risk-head">
               <span className="risk-level">{risk.level}</span>
               <strong>{risk.title}</strong>
-              <span className="risk-when">{when(risk, now, timezone)}</span>
+              <span className="risk-when">{riskWhen(risk, now, timezone)}</span>
             </div>
             <p>{risk.detail}</p>
           </li>
         ))}
       </ul>
-      <p className="card-note">
-        Estimado a partir da previsão. Para alertas oficiais, consulte a Defesa Civil e o INMET.
-      </p>
+      {!afterSevere && (
+        <p className="card-note">
+          Estimado a partir da previsão. Para alertas oficiais, consulte a Defesa Civil e o INMET.
+        </p>
+      )}
     </section>
   );
 }

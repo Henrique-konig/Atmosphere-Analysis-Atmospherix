@@ -6,7 +6,7 @@ import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
-import { detectRisks } from "@/lib/risks";
+import { detectRisks, isSevereWeather } from "@/lib/risks";
 import {
   loadHere,
   loadLastPlace,
@@ -171,6 +171,8 @@ export default function WeatherScreen() {
   const forecast = data?.forecast;
 
   const risks = useMemo(() => (forecast ? detectRisks(forecast) : []), [forecast]);
+  const severe = risks.filter(isSevereWeather);
+  const otherRisks = risks.filter((r) => !isSevereWeather(r));
   const theme = forecast
     ? describeWeather(forecast.current.weatherCode, forecast.current.isDay).theme
     : "cloudy-day";
@@ -245,7 +247,7 @@ export default function WeatherScreen() {
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
           <div className={`layout${loading ? " refreshing" : ""}`}>
             <RiskBanner risks={risks} timezone={forecast.timezone} now={forecast.current.time} />
-            <HourlyCard forecast={forecast} />
+            <HourlyCard forecast={forecast} airQuality={data.airQuality} />
             <div className="columns">
               <div className="col-main">
                 <DailyCard forecast={forecast} onSelectDay={setDay} />
@@ -271,6 +273,7 @@ export default function WeatherScreen() {
                   gusts={forecast.current.windGusts}
                   direction={forecast.current.windDirection}
                 />
+                <AirQualityTile air={data.airQuality} />
                 <PrecipitationTile forecast={forecast} />
                 <FeelsLikeTile
                   actual={forecast.current.temperature}
@@ -295,11 +298,13 @@ export default function WeatherScreen() {
             </div>
           </div>
           <footer className="footer">
-            Dados: <a href="https://open-meteo.com/">Open-Meteo</a> · Mapa: Esri, OpenStreetMap ·{" "}
+            Dados: <a href="https://open-meteo.com/">Open-Meteo</a> (qualidade do ar: CAMS) · Mapa:
+            Esri, OpenStreetMap ·{" "}
             <a href="https://github.com/Henrique-konig/Atmosphere-Analysis-Atmospherix">Código</a>
           </footer>
           <DaySheet
             forecast={forecast}
+            airQuality={data.airQuality}
             day={day}
             onSelectDay={setDay}
             onClose={() => setDay(null)}

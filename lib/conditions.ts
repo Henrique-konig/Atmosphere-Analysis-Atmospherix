@@ -71,6 +71,49 @@ export function uvLevel(uv: number): { label: string; advice: string } {
   return { label: "Extremo", advice: "Evite se expor ao sol." };
 }
 
+export interface AqiLevel {
+  label: string;
+  advice: string;
+  /** CSS class suffix for the level colour. */
+  tone: "good" | "moderate" | "sensitive" | "unhealthy" | "very-unhealthy" | "hazardous";
+}
+
+/** US EPA AQI categories. */
+export function aqiLevel(aqi: number): AqiLevel {
+  if (aqi <= 50)
+    return { label: "Boa", advice: "Ar limpo, bom para atividades ao ar livre.", tone: "good" };
+  if (aqi <= 100)
+    return {
+      label: "Moderada",
+      advice: "Pessoas muito sensíveis devem reduzir esforços longos ao ar livre.",
+      tone: "moderate",
+    };
+  if (aqi <= 150)
+    return {
+      label: "Ruim para sensíveis",
+      advice: "Crianças, idosos e quem tem asma devem evitar esforço ao ar livre.",
+      tone: "sensitive",
+    };
+  if (aqi <= 200)
+    return { label: "Ruim", advice: "Reduza atividades ao ar livre.", tone: "unhealthy" };
+  if (aqi <= 300)
+    return {
+      label: "Muito ruim",
+      advice: "Evite atividades ao ar livre e mantenha as janelas fechadas.",
+      tone: "very-unhealthy",
+    };
+  return { label: "Perigosa", advice: "Fique em ambientes fechados.", tone: "hazardous" };
+}
+
+/** UV colour class suffix, matching the UV bar. */
+export function uvTone(uv: number): "low" | "moderate" | "high" | "very-high" | "extreme" {
+  if (uv < 3) return "low";
+  if (uv < 6) return "moderate";
+  if (uv < 8) return "high";
+  if (uv < 11) return "very-high";
+  return "extreme";
+}
+
 export function visibilityLabel(meters: number): string {
   if (meters >= 20_000) return "Visibilidade excelente.";
   if (meters >= 10_000) return "Boa visibilidade.";

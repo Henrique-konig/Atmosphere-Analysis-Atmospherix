@@ -1,5 +1,6 @@
 import { describeWeather } from "./conditions";
 import { formatHour, present } from "./format";
+import { moonInfo, type MoonInfo } from "./moon";
 import type { Forecast } from "./types";
 
 interface Range {
@@ -19,6 +20,7 @@ export interface DayDetails {
   min: number | null;
   feelsLike: Range | null;
   humidity: Range | null;
+  dewPoint: Range | null;
   pressure: Range | null;
   precipitation: number | null;
   precipitationProbability: number | null;
@@ -29,6 +31,8 @@ export interface DayDetails {
   sunrise: number | null;
   sunset: number | null;
   daylight: number | null;
+  /** The moon at midday, local time. */
+  moon: MoonInfo;
   /** Hour of the highest temperature, when the hourly data has it. */
   warmestHour: number | null;
 }
@@ -65,6 +69,7 @@ export function dayDetails(forecast: Forecast, day: number): DayDetails {
     min: daily.temperatureMin[day],
     feelsLike: range(pick(dayHours.apparentTemperature)),
     humidity: range(pick(dayHours.humidity)),
+    dewPoint: range(pick(dayHours.dewPoint)),
     pressure: range(pick(dayHours.pressure)),
     precipitation: daily.precipitationSum[day],
     precipitationProbability: daily.precipitationProbabilityMax[day],
@@ -75,6 +80,7 @@ export function dayDetails(forecast: Forecast, day: number): DayDetails {
     sunrise: daily.sunrise[day],
     sunset: daily.sunset[day],
     daylight: daily.daylightDuration[day],
+    moon: moonInfo(start + 12 * 3600),
     warmestHour,
   };
 }
@@ -99,5 +105,6 @@ export function daySummary(d: DayDetails, timeZone: string): string {
   if (d.gustsMax != null && d.gustsMax >= 50) {
     parts.push(`Rajadas de vento de até ${Math.round(d.gustsMax)} km/h.`);
   }
+  if (d.moon.name === "Lua cheia" || d.moon.name === "Lua nova") parts.push(`${d.moon.name}.`);
   return parts.join(" ");
 }
