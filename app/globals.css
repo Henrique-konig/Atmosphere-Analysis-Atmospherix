@@ -1409,3 +1409,35 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Offline: the forecast on screen is a saved copy */
+.offline-banner {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 8px;
+  padding: 6px 6px 6px 14px;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  font-size: 0.85rem;
+}
+
+.offline-banner strong {
+  font-weight: 600;
+}
+
+.offline-banner button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--text);
+  cursor: pointer;
+}
