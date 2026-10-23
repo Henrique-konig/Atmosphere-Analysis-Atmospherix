@@ -10,6 +10,7 @@ export interface SavedPlace {
   current?: boolean;
 }
 
+// Favorite cities, in the order the user saved them.
 const SAVED_KEY = "atmospherix:places";
 const LAST_KEY = "atmospherix:last";
 const HERE_KEY = "atmospherix:here";
@@ -42,6 +43,20 @@ export const storeHere = (place: SavedPlace) => write(HERE_KEY, place);
 
 export function samePlace(a: SavedPlace, b: SavedPlace): boolean {
   return Math.abs(a.latitude - b.latitude) < 0.01 && Math.abs(a.longitude - b.longitude) < 0.01;
+}
+
+/** Adds the place to the favorites, or removes it when it is already there. */
+export function toggleFavorite(list: SavedPlace[], place: SavedPlace): SavedPlace[] {
+  if (list.some((p) => samePlace(p, place))) return list.filter((p) => !samePlace(p, place));
+  return [
+    ...list,
+    {
+      name: place.name,
+      detail: place.detail,
+      latitude: place.latitude,
+      longitude: place.longitude,
+    },
+  ];
 }
 
 export function fromSearch(place: Place, detail: string): SavedPlace {
