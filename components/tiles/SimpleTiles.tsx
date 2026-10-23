@@ -1,6 +1,6 @@
 import { Droplet, Eye, Thermometer } from "lucide-react";
 import { feelsLikeLabel, humidityLabel, visibilityLabel } from "@/lib/conditions";
-import { formatNumber, formatTemp } from "@/lib/format";
+import { distanceUnit, formatDistanceNumber, formatNumber, formatTemp } from "@/lib/format";
 import Card from "../Card";
 
 export function FeelsLikeTile({
@@ -52,7 +52,7 @@ export function VisibilityTile({ meters }: { meters: number | null }) {
   return (
     <Card title="Visibilidade" icon={Eye} className="tile">
       <p className="tile-value">
-        {formatNumber(km, km != null && km < 10 ? 1 : 0)} {km != null && <small>km</small>}
+        {formatDistanceNumber(km)} {km != null && <small>{distanceUnit()}</small>}
       </p>
       {meters != null && <p className="tile-text">{visibilityLabel(meters)}</p>}
     </Card>

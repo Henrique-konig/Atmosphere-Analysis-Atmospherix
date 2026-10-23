@@ -1,10 +1,25 @@
 :root {
+  /* Foreground as an RGB triple, so translucent variants follow the theme. */
+  --fg: 255, 255, 255;
   --text: #ffffff;
-  --muted: rgba(255, 255, 255, 0.66);
-  --faint: rgba(255, 255, 255, 0.38);
+  --inverse: #10233f;
+  --muted: rgba(var(--fg), 0.66);
+  --faint: rgba(var(--fg), 0.38);
   --card: rgba(18, 28, 48, 0.26);
-  --card-border: rgba(255, 255, 255, 0.12);
-  --divider: rgba(255, 255, 255, 0.14);
+  --card-border: rgba(var(--fg), 0.12);
+  --divider: rgba(var(--fg), 0.14);
+  --track: rgba(0, 0, 0, 0.24);
+  --shadow: rgba(0, 0, 0, 0.18);
+  --page: #1b3a63;
+  --sheet: rgba(20, 24, 34, 0.94);
+  --compass-center: rgba(22, 34, 58, 0.92);
+  --rain: #7cc8ff;
+  --error: #ff9f97;
+  --sun: #ffd60a;
+  --icon-moon: #e8edf6;
+  --icon-cloud: #f2f5fa;
+  --icon-cloud-sun: #ffe066;
+  --icon-rain: #8fd0ff;
   --accent: #0a84ff;
   --warn: #ffd60a;
   --alert: #ff453a;
@@ -18,6 +33,31 @@
   -webkit-font-smoothing: antialiased;
 }
 
+/* Light theme: pale skies, dark text. data-theme is set on <html> by lib/theme.ts. */
+:root[data-theme="light"] {
+  --fg: 16, 35, 63;
+  --text: #10233f;
+  --inverse: #ffffff;
+  --muted: rgba(var(--fg), 0.7);
+  --faint: rgba(var(--fg), 0.55);
+  --card: rgba(255, 255, 255, 0.5);
+  --card-border: rgba(var(--fg), 0.1);
+  --divider: rgba(var(--fg), 0.12);
+  --track: rgba(var(--fg), 0.14);
+  --shadow: rgba(var(--fg), 0.4);
+  --page: #cfe0f2;
+  --sheet: rgba(242, 246, 251, 0.96);
+  --compass-center: rgba(255, 255, 255, 0.92);
+  --rain: #0b6bc4;
+  --error: #c4291c;
+  --sun: #e9a400;
+  --icon-moon: #5d6f8c;
+  --icon-cloud: #5f7290;
+  --icon-cloud-sun: #e9a400;
+  --icon-rain: #1d82d6;
+  color-scheme: light;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -27,7 +67,7 @@ body {
   margin: 0;
   min-height: 100%;
   color: var(--text);
-  background: #1b3a63;
+  background: var(--page);
 }
 
 h1,
@@ -60,7 +100,7 @@ a {
 }
 
 :focus-visible {
-  outline: 2px solid #fff;
+  outline: 2px solid var(--text);
   outline-offset: 2px;
 }
 
@@ -97,6 +137,31 @@ a {
 }
 .theme-fog {
   --sky: linear-gradient(180deg, #5d6670 0%, #858e98 55%, #aeb5bc 100%);
+}
+
+[data-theme="light"] .theme-clear-day {
+  --sky: linear-gradient(180deg, #8ec5f5 0%, #b9dcfa 55%, #e3f1fd 100%);
+}
+[data-theme="light"] .theme-clear-night {
+  --sky: linear-gradient(180deg, #a9b6dc 0%, #c6cfea 55%, #e3e8f6 100%);
+}
+[data-theme="light"] .theme-cloudy-day {
+  --sky: linear-gradient(180deg, #b3c4d8 0%, #ccd8e5 55%, #e6edf4 100%);
+}
+[data-theme="light"] .theme-cloudy-night {
+  --sky: linear-gradient(180deg, #a7b0c0 0%, #c3cad6 55%, #e0e4ea 100%);
+}
+[data-theme="light"] .theme-rain {
+  --sky: linear-gradient(180deg, #9fb2c8 0%, #bfcddc 55%, #dfe7ef 100%);
+}
+[data-theme="light"] .theme-storm {
+  --sky: linear-gradient(180deg, #ada6c8 0%, #c8c2dd 55%, #e4e1ef 100%);
+}
+[data-theme="light"] .theme-snow {
+  --sky: linear-gradient(180deg, #c4d3e3 0%, #dbe5ef 55%, #f1f5f9 100%);
+}
+[data-theme="light"] .theme-fog {
+  --sky: linear-gradient(180deg, #bcc2c8 0%, #d3d7db 55%, #eaecee 100%);
 }
 
 .screen {
@@ -137,7 +202,7 @@ a {
   width: 38px;
   height: 38px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(var(--fg), 0.16);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   flex-shrink: 0;
@@ -151,7 +216,7 @@ a {
   padding: 0 14px;
   border: 0;
   border-radius: 19px;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(var(--fg), 0.16);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
   color: var(--text);
@@ -181,7 +246,7 @@ a {
   align-items: center;
   text-align: center;
   padding: 8px 0 28px;
-  text-shadow: 0 1px 12px rgba(0, 0, 0, 0.18);
+  text-shadow: 0 1px 12px var(--shadow);
 }
 
 .placeholder {
@@ -199,7 +264,7 @@ a {
 }
 
 .hero-place:hover {
-  background: rgba(255, 255, 255, 0.1);
+  background: rgba(var(--fg), 0.1);
 }
 
 .hero-city {
@@ -226,7 +291,7 @@ a {
 .hero-condition {
   font-size: 1.25rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.92);
+  color: rgba(var(--fg), 0.92);
 }
 
 .hero-range {
@@ -325,22 +390,22 @@ a {
   flex-shrink: 0;
 }
 .icon-sun {
-  color: #ffd60a;
+  color: var(--sun);
 }
 .icon-moon {
-  color: #e8edf6;
+  color: var(--icon-moon);
 }
 .icon-cloud {
-  color: #f2f5fa;
+  color: var(--icon-cloud);
 }
 .icon-cloud-sun {
-  color: #ffe066;
+  color: var(--icon-cloud-sun);
 }
 .icon-rain {
-  color: #8fd0ff;
+  color: var(--icon-rain);
 }
 .icon-storm {
-  color: #ffd60a;
+  color: var(--sun);
 }
 
 /* Risks */
@@ -389,7 +454,7 @@ a {
 
 .risk p {
   font-size: 0.88rem;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(var(--fg), 0.86);
   margin-top: 2px;
 }
 
@@ -499,7 +564,7 @@ a {
   width: 28px;
   height: 28px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.16);
+  background: rgba(var(--fg), 0.16);
 }
 
 .strip-arrow-left {
@@ -517,12 +582,12 @@ a {
   }
 
   .strip-arrow:hover {
-    background: rgba(255, 255, 255, 0.3);
+    background: rgba(var(--fg), 0.3);
   }
 
   .hourly-strip {
     scrollbar-width: thin;
-    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+    scrollbar-color: rgba(var(--fg), 0.35) transparent;
     padding-bottom: 8px;
   }
 
@@ -533,7 +598,7 @@ a {
 
   .hourly-strip::-webkit-scrollbar-thumb {
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.35);
+    background: rgba(var(--fg), 0.35);
   }
 }
 
@@ -580,7 +645,7 @@ a {
 .daily-prob {
   font-size: 0.68rem;
   font-weight: 700;
-  color: #7cc8ff;
+  color: var(--rain);
 }
 
 .hourly-temp {
@@ -615,11 +680,11 @@ a {
 }
 
 .daily-row:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(var(--fg), 0.08);
 }
 
 .daily-row:active {
-  background: rgba(255, 255, 255, 0.14);
+  background: rgba(var(--fg), 0.14);
 }
 
 .daily-list li:first-child {
@@ -647,7 +712,7 @@ a {
   position: relative;
   height: 5px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--track);
 }
 
 .range-fill {
@@ -702,7 +767,7 @@ a {
   padding-top: 10px;
   font-size: 0.82rem;
   line-height: 1.35;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(var(--fg), 0.86);
 }
 
 .uv-bar {
@@ -733,7 +798,7 @@ a {
   height: 5px;
   margin-top: 12px;
   border-radius: 3px;
-  background: rgba(0, 0, 0, 0.24);
+  background: var(--track);
   overflow: hidden;
 }
 
@@ -748,25 +813,25 @@ a {
 }
 
 .sun-horizon {
-  stroke: rgba(255, 255, 255, 0.3);
+  stroke: rgba(var(--fg), 0.3);
   stroke-width: 0.8;
 }
 
 .sun-path {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.25);
+  stroke: rgba(var(--fg), 0.25);
   stroke-width: 1.6;
   stroke-dasharray: 2 3;
 }
 
 .sun-path-done {
   fill: none;
-  stroke: #ffd60a;
+  stroke: var(--sun);
   stroke-width: 1.8;
 }
 
 .sun-dot {
-  fill: #ffd60a;
+  fill: var(--sun);
   filter: drop-shadow(0 0 4px rgba(255, 214, 10, 0.8));
 }
 
@@ -820,12 +885,12 @@ a {
 }
 
 .compass-tick {
-  stroke: rgba(255, 255, 255, 0.35);
+  stroke: rgba(var(--fg), 0.35);
   stroke-width: 1;
 }
 
 .compass-tick.major {
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 1.6;
 }
 
@@ -838,22 +903,22 @@ a {
 }
 
 .compass-arrow {
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 2.4;
   stroke-linecap: round;
 }
 
 .compass-head,
 .compass-tail {
-  fill: #fff;
+  fill: var(--text);
 }
 
 .compass-center {
-  fill: rgba(22, 34, 58, 0.92);
+  fill: var(--compass-center);
 }
 
 .compass-speed {
-  fill: #fff;
+  fill: var(--text);
   font-size: 14px;
   font-weight: 600;
   text-anchor: middle;
@@ -873,7 +938,7 @@ a {
 
 .gauge-track {
   fill: none;
-  stroke: rgba(255, 255, 255, 0.28);
+  stroke: rgba(var(--fg), 0.28);
   stroke-width: 6;
   stroke-linecap: round;
   stroke-dasharray: 1.2 3.2;
@@ -886,11 +951,11 @@ a {
 }
 
 .gauge-trend {
-  color: #fff;
+  color: var(--text);
 }
 
 .gauge-value {
-  fill: #fff;
+  fill: var(--text);
   font-size: 20px;
   font-weight: 600;
   text-anchor: middle;
@@ -915,12 +980,12 @@ a {
 
 .moon-dark {
   fill: rgba(0, 0, 0, 0.35);
-  stroke: rgba(255, 255, 255, 0.18);
+  stroke: rgba(var(--fg), 0.18);
 }
 
 .moon-lit {
   fill: #eef1f6;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.35));
+  filter: drop-shadow(0 0 6px rgba(var(--fg), 0.35));
 }
 
 .moon .wind-rows {
@@ -955,6 +1020,7 @@ a {
   padding: 5px 12px;
   border-radius: 999px;
   font-size: 0.8rem;
+  color: #fff;
   background: rgba(10, 16, 28, 0.72);
   backdrop-filter: blur(8px);
   white-space: nowrap;
@@ -1023,7 +1089,7 @@ a {
 
 .rain-map-controls input {
   flex: 1;
-  accent-color: #fff;
+  accent-color: var(--text);
 }
 
 .rain-map-time {
@@ -1056,11 +1122,11 @@ a {
 .rain-map .leaflet-control-attribution {
   font-size: 9px;
   background: rgba(10, 16, 28, 0.6) !important;
-  color: var(--faint);
+  color: rgba(255, 255, 255, 0.5);
 }
 
 .rain-map .leaflet-control-attribution a {
-  color: var(--muted);
+  color: rgba(255, 255, 255, 0.7);
 }
 
 /* City list */
@@ -1075,13 +1141,13 @@ a {
   align-items: center;
   border-radius: 18px;
   background: var(--sky);
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
-  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 0 0 1px rgba(var(--fg), 0.1);
+  text-shadow: 0 1px 8px var(--shadow);
   overflow: hidden;
 }
 
 .city-card.active {
-  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 0 0 2px rgba(var(--fg), 0.85);
 }
 
 .city-card-main {
@@ -1121,7 +1187,7 @@ a {
 .city-card small {
   font-size: 0.8rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.82);
+  color: rgba(var(--fg), 0.82);
 }
 
 .city-card-condition {
@@ -1146,7 +1212,7 @@ a {
 
 .city-card-remove {
   margin-right: 6px;
-  color: rgba(255, 255, 255, 0.7);
+  color: rgba(var(--fg), 0.7);
 }
 
 .sheet-hint {
@@ -1209,8 +1275,8 @@ a {
 }
 
 .day-strip button.selected strong {
-  background: #fff;
-  color: #10233f;
+  background: var(--text);
+  color: var(--inverse);
 }
 
 .day-head {
@@ -1242,13 +1308,13 @@ a {
 .day-range {
   font-size: 1rem;
   font-weight: 500;
-  color: rgba(255, 255, 255, 0.86);
+  color: rgba(var(--fg), 0.86);
 }
 
 .day-summary {
   font-size: 0.92rem;
   line-height: 1.4;
-  color: rgba(255, 255, 255, 0.9);
+  color: rgba(var(--fg), 0.9);
 }
 
 .day-chart-plot {
@@ -1273,7 +1339,7 @@ a {
 }
 
 .day-chart-area {
-  fill: rgba(255, 255, 255, 0.08);
+  fill: rgba(var(--fg), 0.08);
 }
 
 .day-chart-grid {
@@ -1283,14 +1349,14 @@ a {
 }
 
 .day-chart-now {
-  stroke: #fff;
+  stroke: var(--text);
   stroke-width: 1.5;
   stroke-dasharray: 4 4;
   vector-effect: non-scaling-stroke;
 }
 
 .day-chart-bar {
-  fill: #7cc8ff;
+  fill: var(--rain);
   opacity: 0.55;
 }
 
@@ -1332,7 +1398,7 @@ a {
   width: 10px;
   height: 10px;
   border-radius: 2px;
-  background: #7cc8ff;
+  background: var(--rain);
   opacity: 0.7;
 }
 
@@ -1366,7 +1432,7 @@ a {
 }
 
 .hourly-rain.wet {
-  color: #7cc8ff;
+  color: var(--rain);
   font-weight: 600;
 }
 
@@ -1399,7 +1465,7 @@ a {
   padding: 0;
   border: 0;
   color: var(--text);
-  background: rgba(20, 24, 34, 0.94);
+  background: var(--sheet);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 }
@@ -1489,7 +1555,7 @@ a {
   align-items: center;
   gap: 6px;
   border-radius: 14px;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(var(--fg), 0.06);
 }
 
 .sheet-list li.active {
@@ -1524,7 +1590,7 @@ a {
 }
 
 .error {
-  color: #ff9f97;
+  color: var(--error);
 }
 
 .spin {
@@ -1620,6 +1686,25 @@ a {
   font-weight: 600;
 }
 
+/* Darker shades so the levels stay readable on the light theme's pale cards. */
+[data-theme="light"] .uv-moderate,
+[data-theme="light"] .aqi-moderate {
+  color: #9a6b00;
+}
+[data-theme="light"] .uv-high,
+[data-theme="light"] .aqi-sensitive {
+  color: #b85c00;
+}
+[data-theme="light"] .uv-very-high,
+[data-theme="light"] .aqi-unhealthy {
+  color: #c4291c;
+}
+[data-theme="light"] .uv-extreme,
+[data-theme="light"] .aqi-very-unhealthy,
+[data-theme="light"] .aqi-hazardous {
+  color: #8a3ab9;
+}
+
 @media (max-width: 420px) {
   .air {
     grid-template-columns: minmax(0, 1fr);
@@ -1627,5 +1712,73 @@ a {
 
   .air-rows {
     margin-top: 10px;
+  }
+}
+
+/* Settings */
+.setting {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  min-width: 0;
+}
+
+.setting legend {
+  padding: 0 0 8px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+}
+
+.segmented {
+  display: flex;
+  padding: 2px;
+  border-radius: 10px;
+  background: rgba(118, 118, 128, 0.24);
+}
+
+.segmented label {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.segmented input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segmented span {
+  display: block;
+  padding: 8px 6px;
+  border-radius: 8px;
+  font-size: 0.88rem;
+  font-weight: 500;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.segmented input:checked + span {
+  font-weight: 600;
+  background: rgba(var(--fg), 0.22);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.18);
+}
+
+[data-theme="light"] .segmented input:checked + span {
+  background: #fff;
+}
+
+.segmented input:focus-visible + span {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+
+@media (min-width: 600px) {
+  .settings-sheet {
+    max-width: 420px;
   }
 }

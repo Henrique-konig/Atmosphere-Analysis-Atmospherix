@@ -1,3 +1,14 @@
+import {
+  convertDistance,
+  convertPrecipitation,
+  convertSpeed,
+  convertTemp,
+  distanceUnit,
+  getUnits,
+  precipitationUnit,
+  speedUnit,
+} from "./units";
+
 const cache = new Map<string, Intl.DateTimeFormat>();
 
 /** Intl formatters are costly to create; reuse one per time zone and pattern. */
@@ -57,7 +68,30 @@ export function compassPoint(deg: number): string {
 /** Shown in place of a value the model did not provide. */
 export const MISSING = "—";
 
-export const formatTemp = (t: number | null) => (t == null ? MISSING : `${Math.round(t)}°`);
+/** Temperature (°C in) in the chosen unit: "27°". */
+export const formatTemp = (t: number | null) =>
+  t == null ? MISSING : `${Math.round(convertTemp(t))}°`;
+
+/** Just the number, for screen-reader labels ("27 graus"). */
+export const formatTempNumber = (t: number | null) =>
+  t == null ? MISSING : String(Math.round(convertTemp(t)));
+
+/** Wind speed (km/h in), number only, in the chosen unit. */
+export const formatSpeedNumber = (kmh: number | null) =>
+  kmh == null ? MISSING : String(Math.round(convertSpeed(kmh)));
+
+/** Wind speed (km/h in) with its unit: "12 km/h", "7 mph". */
+export const formatSpeed = (kmh: number | null) =>
+  kmh == null ? MISSING : `${Math.round(convertSpeed(kmh))} ${speedUnit()}`;
+
+/** Visibility (km in), number only: one decimal below 10. */
+export function formatDistanceNumber(km: number | null): string {
+  if (km == null) return MISSING;
+  const v = convertDistance(km);
+  return formatNumber(v, v < 10 ? 1 : 0);
+}
+
+export { distanceUnit, precipitationUnit, speedUnit };
 
 /** Rounded to `digits` decimals, or "—" when the value is missing. */
 export const formatNumber = (v: number | null, digits = 0) =>
@@ -66,9 +100,16 @@ export const formatNumber = (v: number | null, digits = 0) =>
 /** The values of a series that the model actually provided. */
 export const present = (values: (number | null)[]) => values.filter((v): v is number => v != null);
 
-/** Hourly rain in mm, pt-BR style: "0", "0,4", "12". */
+/** Rain (mm in), number only, pt-BR style: "0", "0,4", "12" (or "0,02", "1,3" in inches). */
 export function formatRain(mm: number | null): string {
   if (mm == null) return MISSING;
-  if (mm < 0.05) return "0";
-  return mm < 10 ? mm.toFixed(1).replace(".", ",") : String(Math.round(mm));
+  const v = convertPrecipitation(mm);
+  const inches = getUnits().precipitation === "in";
+  if (v < (inches ? 0.005 : 0.05)) return "0";
+  const decimals = inches ? (v < 1 ? 2 : 1) : v < 10 ? 1 : 0;
+  return v.toFixed(decimals).replace(".", ",");
 }
+
+/** Rain (mm in) with its unit: "0,4 mm", "0,02 in". */
+export const formatRainAmount = (mm: number | null) =>
+  mm == null ? MISSING : `${formatRain(mm)} ${precipitationUnit()}`;

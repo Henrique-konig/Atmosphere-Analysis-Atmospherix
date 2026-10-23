@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import ServiceWorker from "@/components/ServiceWorker";
+import { THEME_BOOT_SCRIPT } from "@/lib/theme";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -19,7 +20,11 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR">
+    // The boot script sets data-theme before React hydrates.
+    <html lang="pt-BR" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body>
         {children}
         <ServiceWorker />

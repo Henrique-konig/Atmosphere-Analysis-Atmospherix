@@ -1,7 +1,7 @@
 import { Clock, Sunrise, Sunset } from "lucide-react";
 import { aqiAt } from "@/lib/airquality";
 import { describeWeather } from "@/lib/conditions";
-import { formatHour, formatTemp, formatTime, present } from "@/lib/format";
+import { formatHour, formatSpeed, formatTemp, formatTime, present } from "@/lib/format";
 import type { AirQuality, Forecast } from "@/lib/types";
 import Card from "./Card";
 import HourDetails from "./HourDetails";
@@ -41,7 +41,7 @@ export default function HourlyCard({
   const gusts = present(hourly.windGusts.slice(0, HOURS));
   const summary =
     gusts.length > 0
-      ? `${condition.label} agora. Rajadas de vento de até ${Math.round(Math.max(...gusts))} km/h nas próximas horas.`
+      ? `${condition.label} agora. Rajadas de vento de até ${formatSpeed(Math.max(...gusts))} nas próximas horas.`
       : `${condition.label} agora.`;
 
   return (

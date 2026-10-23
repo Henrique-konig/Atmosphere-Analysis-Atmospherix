@@ -68,7 +68,7 @@ describe("daySummary", () => {
     const f = threeDays();
     const text = daySummary(dayDetails(f, 0), f.timezone);
     expect(text).toContain("por volta das 15h");
-    expect(text).toContain("Chance de chuva de 70%, com cerca de 4 mm no total.");
+    expect(text).toContain("Chance de chuva de 70%, com cerca de 4,2 mm no total.");
     expect(text).toContain("Rajadas de vento de até 62 km/h.");
   });
 

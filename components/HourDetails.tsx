@@ -1,6 +1,12 @@
 import { ArrowUp, Droplets, Leaf, Sun } from "lucide-react";
 import { aqiLevel, uvLevel, uvTone } from "@/lib/conditions";
-import { compassPoint, formatRain, MISSING } from "@/lib/format";
+import {
+  compassPoint,
+  formatRainAmount,
+  formatSpeed,
+  formatSpeedNumber,
+  MISSING,
+} from "@/lib/format";
 import type { HourlyForecast } from "@/lib/types";
 
 /**
@@ -40,14 +46,14 @@ export default function HourDetails({
             style={{ transform: `rotate(${direction + 180}deg)` }}
           />
         )}
-        {speed == null ? MISSING : `${Math.round(speed)} km/h`}
+        {formatSpeed(speed)}
       </span>
       <span className="hourly-gust" title="Rajadas">
-        {gust == null ? MISSING : `raj. ${Math.round(gust)}`}
+        {gust == null ? MISSING : `raj. ${formatSpeedNumber(gust)}`}
       </span>
       <span className={wet ? "hourly-rain wet" : "hourly-rain"} title="Precipitação">
         <Droplets size={11} aria-hidden />
-        {rain == null ? MISSING : `${formatRain(rain)} mm`}
+        {formatRainAmount(rain)}
       </span>
       <span
         className={roundedUv == null ? "hourly-uv" : `hourly-uv uv-${uvTone(roundedUv)}`}

@@ -1,6 +1,14 @@
 "use client";
 
-import { Download, LoaderCircle, Navigation, RefreshCw, Search, Star } from "lucide-react";
+import {
+  Download,
+  LoaderCircle,
+  Navigation,
+  RefreshCw,
+  Search,
+  Settings2,
+  Star,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -11,13 +19,19 @@ import {
   loadHere,
   loadLastPlace,
   loadSavedPlaces,
+  loadTheme,
+  loadUnits,
   samePlace,
   storeHere,
   storeLastPlace,
   storeSavedPlaces,
+  storeTheme,
+  storeUnits,
   toggleFavorite,
   type SavedPlace,
 } from "@/lib/storage";
+import { applyTheme, watchSystemTheme, type ThemePreference } from "@/lib/theme";
+import { setUnits, type Units } from "@/lib/units";
 import CitySheet from "./CitySheet";
 import DailyCard from "./DailyCard";
 import DaySheet from "./DaySheet";
@@ -26,6 +40,7 @@ import HourlyCard from "./HourlyCard";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
+import SettingsSheet from "./SettingsSheet";
 import AirQualityTile from "./tiles/AirQualityTile";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
@@ -97,7 +112,32 @@ export default function WeatherScreen() {
   const [locateError, setLocateError] = useState<string | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
   const [day, setDay] = useState<number | null>(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [units, setUnitsState] = useState<Units>(() => {
+    const stored = loadUnits();
+    // The formatters read the units from lib/units; set them before the first render.
+    setUnits(stored);
+    return stored;
+  });
+  const [themePref, setThemePref] = useState<ThemePreference>(() => loadTheme());
   const { canInstall, install } = useInstallPrompt();
+
+  const changeUnits = useCallback((next: Units) => {
+    setUnits(next);
+    storeUnits(next);
+    setUnitsState(next);
+  }, []);
+
+  const changeTheme = useCallback((next: ThemePreference) => {
+    storeTheme(next);
+    setThemePref(next);
+  }, []);
+
+  useEffect(() => {
+    applyTheme(themePref);
+    if (themePref !== "auto") return;
+    return watchSystemTheme(() => applyTheme("auto"));
+  }, [themePref]);
 
   const choose = useCallback((next: SavedPlace) => {
     setPlace(next);
@@ -170,7 +210,12 @@ export default function WeatherScreen() {
   const { data, error, loading, savedAt, stale, offline, refresh } = useForecast(coords);
   const forecast = data?.forecast;
 
-  const risks = useMemo(() => (forecast ? detectRisks(forecast) : []), [forecast]);
+  // Risk texts include values, so they are rebuilt when the units change.
+  const risks = useMemo(
+    () => (forecast ? detectRisks(forecast) : []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [forecast, units],
+  );
   const severe = risks.filter(isSevereWeather);
   const otherRisks = risks.filter((r) => !isSevereWeather(r));
   const theme = forecast
@@ -213,6 +258,15 @@ export default function WeatherScreen() {
             <Star size={18} fill={favorite ? "currentColor" : "none"} aria-hidden />
           </button>
         )}
+        <button
+          type="button"
+          className="round-button"
+          onClick={() => setSettingsOpen(true)}
+          aria-label="Ajustes: unidades e tema"
+          title="Ajustes"
+        >
+          <Settings2 size={18} aria-hidden />
+        </button>
         <button
           type="button"
           className="round-button"
@@ -322,6 +376,15 @@ export default function WeatherScreen() {
         onSelect={choose}
         onLocate={locate}
         onRemove={(p) => setSaved((list) => list.filter((x) => !samePlace(x, p)))}
+      />
+
+      <SettingsSheet
+        open={settingsOpen}
+        units={units}
+        theme={themePref}
+        onClose={() => setSettingsOpen(false)}
+        onUnitsChange={changeUnits}
+        onThemeChange={changeTheme}
       />
     </main>
   );

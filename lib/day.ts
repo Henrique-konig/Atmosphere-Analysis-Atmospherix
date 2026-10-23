@@ -1,5 +1,5 @@
 import { describeWeather } from "./conditions";
-import { formatHour, present } from "./format";
+import { formatHour, formatRainAmount, formatSpeed, formatTemp, present } from "./format";
 import { moonInfo, type MoonInfo } from "./moon";
 import type { Forecast } from "./types";
 
@@ -91,19 +91,19 @@ export function daySummary(d: DayDetails, timeZone: string): string {
   if (d.max != null && d.min != null) {
     const when =
       d.warmestHour != null ? `, por volta das ${formatHour(d.warmestHour, timeZone)},` : "";
-    parts.push(`Máxima de ${Math.round(d.max)}°${when} e mínima de ${Math.round(d.min)}°.`);
+    parts.push(`Máxima de ${formatTemp(d.max)}${when} e mínima de ${formatTemp(d.min)}.`);
   }
   const prob = d.precipitationProbability;
   const mm = d.precipitation;
   if ((prob != null && prob >= 20) || (mm != null && mm >= 0.5)) {
     const chance = prob != null ? `Chance de chuva de ${prob}%` : "Chuva prevista";
-    const total = mm != null && mm >= 0.5 ? `, com cerca de ${Math.round(mm)} mm no total` : "";
+    const total = mm != null && mm >= 0.5 ? `, com cerca de ${formatRainAmount(mm)} no total` : "";
     parts.push(`${chance}${total}.`);
   } else if (prob != null || mm != null) {
     parts.push("Sem chuva prevista.");
   }
   if (d.gustsMax != null && d.gustsMax >= 50) {
-    parts.push(`Rajadas de vento de até ${Math.round(d.gustsMax)} km/h.`);
+    parts.push(`Rajadas de vento de até ${formatSpeed(d.gustsMax)}.`);
   }
   if (d.moon.name === "Lua cheia" || d.moon.name === "Lua nova") parts.push(`${d.moon.name}.`);
   return parts.join(" ");

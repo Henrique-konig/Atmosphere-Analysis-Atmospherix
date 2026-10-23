@@ -1,3 +1,5 @@
+import { formatTemp } from "./format";
+
 export type IconKind =
   | "sun"
   | "moon"
@@ -133,9 +135,9 @@ export function feelsLikeLabel(actual: number, feels: number, humidity: number |
 }
 
 export function humidityLabel(dewPoint: number): string {
-  if (dewPoint >= 21) return `Abafado. O ponto de orvalho é de ${Math.round(dewPoint)}°.`;
-  if (dewPoint >= 16) return `Um pouco úmido. O ponto de orvalho é de ${Math.round(dewPoint)}°.`;
-  return `Agradável. O ponto de orvalho é de ${Math.round(dewPoint)}°.`;
+  if (dewPoint >= 21) return `Abafado. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
+  if (dewPoint >= 16) return `Um pouco úmido. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
+  return `Agradável. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
 }
 
 /** Compares the pressure now with a few hours ahead. */

@@ -24,12 +24,16 @@ import {
   formatHour,
   formatLongDate,
   formatNumber,
+  formatRain,
+  formatSpeed,
+  formatSpeedNumber,
   formatTemp,
   formatTime,
   formatWeekday,
   MISSING,
 } from "@/lib/format";
 import type { AirQuality, Forecast } from "@/lib/types";
+import { convertTemp, precipitationUnit, speedUnit } from "@/lib/units";
 import Card from "./Card";
 import DayChart from "./DayChart";
 import HourDetails from "./HourDetails";
@@ -52,6 +56,8 @@ const fromTo = (lo: number, hi: number, unit: string) =>
   Math.round(lo) === Math.round(hi)
     ? `${Math.round(lo)}${unit}`
     : `${Math.round(lo)}–${Math.round(hi)}${unit}`;
+
+const tempFromTo = (lo: number, hi: number) => fromTo(convertTemp(lo), convertTemp(hi), "°");
 
 /** Full-screen details of one forecast day, like tapping a day in the iPhone Weather app. */
 export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClose }: Props) {
@@ -201,11 +207,8 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
           <div className="day-tiles">
             <Card title="Chuva" icon={Umbrella} className="day-tile">
               <p className="tile-value">
-                {formatNumber(
-                  d.precipitation,
-                  d.precipitation != null && d.precipitation < 10 ? 1 : 0,
-                )}{" "}
-                {d.precipitation != null && <small>mm</small>}
+                {formatRain(d.precipitation)}{" "}
+                {d.precipitation != null && <small>{precipitationUnit()}</small>}
               </p>
               <p className="tile-text">
                 {d.precipitationProbability == null
@@ -215,16 +218,16 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
             </Card>
             <Card title="Sensação" icon={Thermometer} className="day-tile">
               <p className="tile-value">
-                {d.feelsLike ? fromTo(d.feelsLike.min, d.feelsLike.max, "°") : MISSING}
+                {d.feelsLike ? tempFromTo(d.feelsLike.min, d.feelsLike.max) : MISSING}
               </p>
               <p className="tile-text">Sensação térmica mínima e máxima.</p>
             </Card>
             <Card title="Vento" icon={Wind} className="day-tile">
               <p className="tile-value">
-                {formatNumber(d.windMax)} {d.windMax != null && <small>km/h</small>}
+                {formatSpeedNumber(d.windMax)} {d.windMax != null && <small>{speedUnit()}</small>}
               </p>
               <p className="tile-text">
-                {d.gustsMax != null && `Rajadas de até ${Math.round(d.gustsMax)} km/h. `}
+                {d.gustsMax != null && `Rajadas de até ${formatSpeed(d.gustsMax)}. `}
                 {d.windDirection != null && `Vindo de ${compassPoint(d.windDirection)}.`}
               </p>
             </Card>
@@ -242,7 +245,7 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
               </p>
               <p className="tile-text">
                 {d.dewPoint
-                  ? `Ponto de orvalho de ${fromTo(d.dewPoint.min, d.dewPoint.max, "°")}.`
+                  ? `Ponto de orvalho de ${tempFromTo(d.dewPoint.min, d.dewPoint.max)}.`
                   : "Umidade relativa ao longo do dia."}
               </p>
             </Card>

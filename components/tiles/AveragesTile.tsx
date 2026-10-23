@@ -1,5 +1,6 @@
 import { ChartNoAxesColumn } from "lucide-react";
 import { formatTemp, MISSING } from "@/lib/format";
+import { convertTempDelta } from "@/lib/units";
 import type { TemperatureAverages } from "@/lib/types";
 import Card from "../Card";
 
@@ -17,7 +18,7 @@ export default function AveragesTile({
       </Card>
     );
   }
-  const diff = todayMax == null ? null : Math.round(todayMax - averages.max);
+  const diff = todayMax == null ? null : Math.round(convertTempDelta(todayMax - averages.max));
   const headline =
     diff == null ? MISSING : diff === 0 ? "Na média" : `${diff > 0 ? "+" : ""}${diff}°`;
   return (
