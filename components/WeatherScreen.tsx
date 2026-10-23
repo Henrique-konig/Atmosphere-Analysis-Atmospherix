@@ -26,6 +26,7 @@ import HourlyCard from "./HourlyCard";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
+import TrendsCard from "./TrendsCard";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
 import PrecipitationTile from "./tiles/PrecipitationTile";
@@ -248,6 +249,7 @@ export default function WeatherScreen() {
             <div className="columns">
               <div className="col-main">
                 <DailyCard forecast={forecast} onSelectDay={setDay} />
+                <TrendsCard forecast={forecast} />
                 <RainMap
                   latitude={place.latitude}
                   longitude={place.longitude}
