@@ -18,8 +18,8 @@ ou no computador, e pode ser instalado como app.
   ao longo do dia com a chance de chuva por hora, a previsão hora a hora (com vento), chuva total,
   sensação térmica, vento e rajadas, índice UV, umidade, pressão e nascer/pôr do sol. Dá para trocar
   de dia pela faixa de datas, deslizando para o lado ou com as setas do teclado.
-- **Mapa de precipitação** da região com a chuva prevista para as próximas 12 horas, animado (é
-  previsão do modelo, não radar observado).
+- **Radar de chuva animado**: o radar observado das últimas 2 horas (RainViewer) seguido da chuva
+  prevista pelo modelo para as próximas 12 horas, no mesmo mapa. Sem radar, mostra só a previsão.
 - **Detalhes**: índice UV, nascer/pôr do sol com a trajetória do sol, vento com bússola, precipitação,
   sensação térmica, umidade e ponto de orvalho, visibilidade, pressão com tendência, fase da lua
   (com iluminação e próxima lua cheia) e comparação com a **média histórica** de temperatura.
@@ -96,7 +96,8 @@ tests/                   Testes unitários
 - A localização usa a API de geolocalização do navegador; o nome da cidade vem da geocodificação
   reversa gratuita da BigDataCloud. Cidades salvas ficam no `localStorage`.
 - O mapa usa Leaflet com o mapa base escuro da Esri; a chuva é uma grade de 16 × 16 pontos ao redor
-  da cidade, interpolada num `<canvas>`.
+  da cidade, interpolada num `<canvas>`. O radar vem em blocos da RainViewer, um por quadro, todos
+  carregados de antemão para a animação fluir (`lib/radar.ts`).
 - O service worker (`public/sw.js`) busca sempre dados novos quando há rede e cai para a última cópia
   salva quando não há; os arquivos do build vêm do cache. Os blocos do mapa não passam por ele.
 
@@ -108,7 +109,7 @@ request ganha uma prévia própria antes do merge.
 
 ## Roadmap
 
-- [ ] Radar meteorológico observado no mapa (RainViewer)
+- [x] Radar meteorológico observado no mapa (RainViewer)
 - [ ] Alertas oficiais da Defesa Civil / INMET
 - [ ] Qualidade do ar e pólen
 - [x] Instalar como app (PWA)
@@ -120,6 +121,9 @@ request ganha uma prévia própria antes do merge.
 - Previsão, busca de cidades e médias históricas: [Open-Meteo](https://open-meteo.com), gratuito para **uso não comercial**. Uso comercial
   exige plano pago. Cada ponto da grade conta como uma chamada na cota diária.
 - Nomes de cidades pela localização: BigDataCloud (gratuito, sem chave).
+- Radar: [RainViewer](https://www.rainviewer.com/api.html), gratuito para uso pessoal e educacional.
+  Desde 2026 a API grátis só tem as últimas 2 horas (sem previsão do radar), zoom até 7 e 100
+  pedidos por minuto por IP; por isso as próximas horas vêm do modelo.
 - Mapa base: © Esri, HERE, Garmin, © OpenStreetMap contributors. O provedor fica em
   `lib/basemap.ts`.
 
