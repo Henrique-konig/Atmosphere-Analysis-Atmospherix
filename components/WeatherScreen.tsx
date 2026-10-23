@@ -26,6 +26,7 @@ import HourlyCard from "./HourlyCard";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
+import SevereAlert from "./SevereAlert";
 import AirQualityTile from "./tiles/AirQualityTile";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
@@ -246,7 +247,13 @@ export default function WeatherScreen() {
           )}
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
           <div className={`layout${loading ? " refreshing" : ""}`}>
-            <RiskBanner risks={risks} timezone={forecast.timezone} now={forecast.current.time} />
+            <SevereAlert risks={severe} timezone={forecast.timezone} now={forecast.current.time} />
+            <RiskBanner
+              risks={otherRisks}
+              timezone={forecast.timezone}
+              now={forecast.current.time}
+              afterSevere={severe.length > 0}
+            />
             <HourlyCard forecast={forecast} airQuality={data.airQuality} />
             <div className="columns">
               <div className="col-main">
