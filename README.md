@@ -31,6 +31,10 @@ ou no computador, e pode ser instalado como app.
 - **Instalável (PWA)**: botão "Instalar app" no Chrome, Edge e Android; no iPhone, pelo menu
   Compartilhar → "Adicionar à Tela de Início". Abre em tela cheia, com ícone próprio, e mostra a
   última previsão carregada quando está sem internet.
+- **Avisos (opcional)**: pelo sino, notificações de "vai chover em ~1h" (antecedência de 1 a 3 h)
+  e de alertas graves. O navegador só pede permissão quando você liga um aviso. Os avisos são
+  gerados no aparelho, sem servidor de push: chegam com o app aberto ou numa aba em segundo plano,
+  não com ele fechado. No iPhone exigem o app instalado (iOS 16.4+).
 - **Dados ausentes** aparecem como "—", nunca como 0.
 
 ## Stack
@@ -83,7 +87,7 @@ app/
   layout.tsx, page.tsx, icon.svg, apple-icon.png
 components/              Tela, cartões, blocos de detalhe (tiles/), mapa e seletor de cidades
 hooks/                   Busca de dados no cliente
-public/sw.js             Service worker: cache do app e da última previsão (offline)
+public/sw.js             Service worker: cache do app e da última previsão (offline), clique nos avisos
 public/icons/            Ícones do PWA (192, 512 e maskable)
 lib/                     Lógica pura: cliente Open-Meteo, riscos, lua, médias, condições, formatação
 tests/                   Testes unitários
@@ -117,7 +121,8 @@ request ganha uma prévia própria antes do merge.
 - [x] Qualidade do ar
 - [ ] Pólen
 - [x] Instalar como app (PWA)
-- [ ] Notificações de chuva
+- [x] Notificações de chuva (locais, com o app aberto)
+- [ ] Avisos com o app fechado (Web Push, exige servidor)
 
 ## Dados e licenças
 
