@@ -1,4 +1,5 @@
 import type { ThemePreference } from "./theme";
+import { DEFAULT_SETTINGS, type NotifySettings } from "./notifications";
 import type { Place } from "./types";
 import { isUnits, METRIC, type Units } from "./units";
 
@@ -18,6 +19,8 @@ const LAST_KEY = "atmospherix:last";
 const HERE_KEY = "atmospherix:here";
 const UNITS_KEY = "atmospherix:units";
 const THEME_KEY = "atmospherix:theme";
+const NOTIFY_KEY = "atmospherix:notify";
+const SENT_KEY = "atmospherix:notified";
 
 // Storage can be unavailable (private mode, blocked cookies): never let it throw.
 function read<T>(key: string, fallback: T): T {
@@ -56,6 +59,16 @@ export function loadTheme(): ThemePreference {
   return theme === "light" || theme === "dark" ? theme : "auto";
 }
 export const storeTheme = (theme: ThemePreference) => write(THEME_KEY, theme);
+export const loadNotifySettings = (): NotifySettings => ({
+  ...DEFAULT_SETTINGS,
+  ...read<Partial<NotifySettings>>(NOTIFY_KEY, {}),
+});
+export const storeNotifySettings = (settings: NotifySettings) => write(NOTIFY_KEY, settings);
+/** Tags already notified, with when (unix seconds), so nothing is sent twice. */
+export const loadSentNotices = () =>
+  new Map(Object.entries(read<Record<string, number>>(SENT_KEY, {})));
+export const storeSentNotices = (sent: Map<string, number>) =>
+  write(SENT_KEY, Object.fromEntries(sent));
 
 export function samePlace(a: SavedPlace, b: SavedPlace): boolean {
   return Math.abs(a.latitude - b.latitude) < 0.01 && Math.abs(a.longitude - b.longitude) < 0.01;

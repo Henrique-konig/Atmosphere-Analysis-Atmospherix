@@ -7,7 +7,9 @@ import {
   formatTemp,
   formatTempNumber,
 } from "@/lib/format";
+import { chartData } from "@/lib/charts";
 import { isUnits, METRIC, setUnits } from "@/lib/units";
+import { calmForecast } from "./fixtures";
 
 const IMPERIAL = { temperature: "f", speed: "mph", precipitation: "in" } as const;
 
@@ -44,5 +46,16 @@ describe("units", () => {
     expect(isUnits({ temperature: "k", speed: "mph", precipitation: "in" })).toBe(false);
     expect(isUnits(null)).toBe(false);
     expect(isUnits("metric")).toBe(false);
+  });
+
+  it("draws charts in the chosen units", () => {
+    setUnits(IMPERIAL);
+    const f = calmForecast();
+    const temp = chartData(f, "temperature", "days");
+    expect(temp.series[0].values[0]).toBeCloseTo(78.8);
+    const wind = chartData(f, "wind", "hours");
+    expect(wind.unit).toBe(" mph");
+    expect(wind.series[0].values[0]).toBeCloseTo(6.21, 1);
+    expect(chartData(f, "rain", "days").unit).toBe(" in");
   });
 });

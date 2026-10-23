@@ -102,8 +102,11 @@ export const present = (values: (number | null)[]) => values.filter((v): v is nu
 
 /** Rain (mm in), number only, pt-BR style: "0", "0,4", "12" (or "0,02", "1,3" in inches). */
 export function formatRain(mm: number | null): string {
-  if (mm == null) return MISSING;
-  const v = convertPrecipitation(mm);
+  return mm == null ? MISSING : formatRainValue(convertPrecipitation(mm));
+}
+
+/** Like formatRain, for a value already in the chosen unit (chart series). */
+export function formatRainValue(v: number): string {
   const inches = getUnits().precipitation === "in";
   if (v < (inches ? 0.005 : 0.05)) return "0";
   const decimals = inches ? (v < 1 ? 2 : 1) : v < 10 ? 1 : 0;

@@ -277,21 +277,32 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
                   : "A previsão de qualidade do ar cobre só os próximos 5 dias."}
               </p>
             </Card>
-            <Card title="Sol" icon={Sunrise} className="day-tile tile-wide">
-              <dl className="wind-rows">
-                <div>
-                  <dt>Nascer</dt>
-                  <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
-                </div>
-                <div>
-                  <dt>Pôr do sol</dt>
-                  <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
-                </div>
-                <div>
-                  <dt>Duração do dia</dt>
-                  <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
-                </div>
-              </dl>
+            <Card title="Sol e Lua" icon={Sunrise} className="day-tile tile-wide moon">
+              <div className="moon-body">
+                <MoonDisc phase={d.moon.phase} latitude={forecast.latitude} label={d.moon.name} />
+                <dl className="wind-rows">
+                  <div>
+                    <dt>Nascer do sol</dt>
+                    <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
+                  </div>
+                  <div>
+                    <dt>Pôr do sol</dt>
+                    <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
+                  </div>
+                  <div>
+                    <dt>Duração do dia</dt>
+                    <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
+                  </div>
+                  <div>
+                    <dt>Lua</dt>
+                    <dd>{d.moon.name}</dd>
+                  </div>
+                  <div>
+                    <dt>Iluminação</dt>
+                    <dd>{Math.round(d.moon.illumination * 100)}%</dd>
+                  </div>
+                </dl>
+              </div>
             </Card>
           </div>
         </div>

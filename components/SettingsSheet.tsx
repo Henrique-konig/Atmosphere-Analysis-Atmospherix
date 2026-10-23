@@ -36,7 +36,7 @@ function Segmented<T extends string>({
   return (
     <fieldset className="setting">
       <legend>{legend}</legend>
-      <div className="segmented">
+      <div className="choice">
         {options.map((o) => (
           <label key={o.value}>
             <input

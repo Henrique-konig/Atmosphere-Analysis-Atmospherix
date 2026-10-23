@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  Bell,
+  BellRing,
   Download,
   LoaderCircle,
   Navigation,
@@ -12,6 +14,7 @@ import {
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
+import { useWeatherNotifications } from "@/hooks/useWeatherNotifications";
 import { describeWeather } from "@/lib/conditions";
 import { reverseGeocode } from "@/lib/reverseGeocode";
 import { detectRisks, isSevereWeather } from "@/lib/risks";
@@ -37,10 +40,13 @@ import DailyCard from "./DailyCard";
 import DaySheet from "./DaySheet";
 import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
+import NotificationSheet from "./NotificationSheet";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
 import SettingsSheet from "./SettingsSheet";
+import SevereAlert from "./SevereAlert";
+import TrendsCard from "./TrendsCard";
 import AirQualityTile from "./tiles/AirQualityTile";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
@@ -120,6 +126,7 @@ export default function WeatherScreen() {
     return stored;
   });
   const [themePref, setThemePref] = useState<ThemePreference>(() => loadTheme());
+  const [notifyOpen, setNotifyOpen] = useState(false);
   const { canInstall, install } = useInstallPrompt();
 
   const changeUnits = useCallback((next: Units) => {
@@ -210,6 +217,18 @@ export default function WeatherScreen() {
   const { data, error, loading, savedAt, stale, offline, refresh } = useForecast(coords);
   const forecast = data?.forecast;
 
+  const notifyPlace = useMemo(
+    () =>
+      place
+        ? { key: `${place.latitude.toFixed(2)},${place.longitude.toFixed(2)}`, name: place.name }
+        : null,
+    [place],
+  );
+  const notifications = useWeatherNotifications(forecast, notifyPlace);
+  const notifying =
+    notifications.permission === "granted" &&
+    (notifications.settings.rain || notifications.settings.severe);
+
   // Risk texts include values, so they are rebuilt when the units change.
   const risks = useMemo(
     () => (forecast ? detectRisks(forecast) : []),
@@ -230,6 +249,15 @@ export default function WeatherScreen() {
             <Download size={16} aria-hidden /> Instalar app
           </button>
         )}
+        <button
+          type="button"
+          className={`round-button notify-button${notifying ? " on" : ""}`}
+          onClick={() => setNotifyOpen(true)}
+          aria-label={notifying ? "Avisos ativados" : "Avisos"}
+          title="Avisos"
+        >
+          {notifying ? <BellRing size={18} aria-hidden /> : <Bell size={18} aria-hidden />}
+        </button>
         <button
           type="button"
           className="round-button"
@@ -300,11 +328,18 @@ export default function WeatherScreen() {
           )}
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
           <div className={`layout${loading ? " refreshing" : ""}`}>
-            <RiskBanner risks={risks} timezone={forecast.timezone} now={forecast.current.time} />
+            <SevereAlert risks={severe} timezone={forecast.timezone} now={forecast.current.time} />
+            <RiskBanner
+              risks={otherRisks}
+              timezone={forecast.timezone}
+              now={forecast.current.time}
+              afterSevere={severe.length > 0}
+            />
             <HourlyCard forecast={forecast} airQuality={data.airQuality} />
             <div className="columns">
               <div className="col-main">
                 <DailyCard forecast={forecast} onSelectDay={setDay} />
+                <TrendsCard forecast={forecast} />
                 <RainMap
                   latitude={place.latitude}
                   longitude={place.longitude}
@@ -364,6 +399,16 @@ export default function WeatherScreen() {
           />
         </>
       )}
+
+      <NotificationSheet
+        open={notifyOpen}
+        placeName={place?.name ?? null}
+        settings={notifications.settings}
+        permission={notifications.permission}
+        onChange={(next) => void notifications.update(next)}
+        onTest={() => void notifications.sendTest()}
+        onClose={() => setNotifyOpen(false)}
+      />
 
       <CitySheet
         open={sheetOpen}
