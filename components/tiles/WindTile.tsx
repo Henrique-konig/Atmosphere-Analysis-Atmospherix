@@ -1,5 +1,5 @@
 import { Wind } from "lucide-react";
-import { compassPoint, formatNumber, MISSING } from "@/lib/format";
+import { compassPoint, formatSpeed, formatSpeedNumber, MISSING, speedUnit } from "@/lib/format";
 import Card from "../Card";
 
 interface Props {
@@ -15,11 +15,11 @@ export default function WindTile({ speed, gusts, direction }: Props) {
       <dl className="wind-rows">
         <div>
           <dt>Vento</dt>
-          <dd>{speed == null ? MISSING : `${Math.round(speed)} km/h`}</dd>
+          <dd>{formatSpeed(speed)}</dd>
         </div>
         <div>
           <dt>Rajadas</dt>
-          <dd>{gusts == null ? MISSING : `${Math.round(gusts)} km/h`}</dd>
+          <dd>{formatSpeed(gusts)}</dd>
         </div>
         <div>
           <dt>Direção</dt>
@@ -71,10 +71,10 @@ export default function WindTile({ speed, gusts, direction }: Props) {
         )}
         <circle cx="60" cy="60" r="17" className="compass-center" />
         <text x="60" y="60" className="compass-speed">
-          {formatNumber(speed)}
+          {formatSpeedNumber(speed)}
         </text>
         <text x="60" y="71" className="compass-unit">
-          km/h
+          {speedUnit()}
         </text>
       </svg>
     </Card>

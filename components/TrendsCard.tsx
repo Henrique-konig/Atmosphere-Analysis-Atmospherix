@@ -8,13 +8,15 @@ import {
   formatDayOfMonth,
   formatHour,
   formatNumber,
-  formatRain,
+  formatRainAmount,
+  formatRainValue,
+  formatSpeed,
   formatTemp,
   formatWeekday,
-  MISSING,
   present,
 } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
+import { convertPrecipitation, convertSpeed } from "@/lib/units";
 import Card from "./Card";
 
 // Drawing space; the SVG stretches to the card, labels are HTML so they never distort.
@@ -32,7 +34,6 @@ const METRICS: { id: Metric; label: string }[] = [
 /** Local hour of a timestamp, 0–23. */
 const localHour = (t: number, tz: string) => Number.parseInt(formatHour(t, tz), 10);
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
-const kmh = (v: number | null) => (v == null ? MISSING : `${Math.round(v)} km/h`);
 const chance = (v: number | null) => (v == null ? "" : ` · ${Math.round(v)}% de chance`);
 
 /** Temperature, rain and wind as charts, for the next 48 hours or the forecast days. */
@@ -52,7 +53,7 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
   const values = scaled.flatMap((s) => present(s.values));
   const top = values.length ? Math.max(...values) : 0;
   const scale = data.fromZero
-    ? niceScale(0, Math.max(top, metric === "rain" ? 1 : 10))
+    ? niceScale(0, Math.max(top, metric === "rain" ? convertPrecipitation(1) : convertSpeed(10)))
     : niceScale(Math.min(...values), top);
 
   const x = (i: number) => ((i + 0.5) / n) * W;
@@ -94,11 +95,12 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
     if (metric === "rain") {
       const mm = days ? daily.precipitationSum[i] : hourly.precipitation[i];
       const prob = days ? daily.precipitationProbabilityMax[i] : hourly.precipitationProbability[i];
-      return `${when} · ${formatRain(mm)}${mm == null ? "" : " mm"}${chance(prob)}`;
+      return `${when} · ${formatRainAmount(mm)}${chance(prob)}`;
     }
-    const [speed, gusts] = data.series.map((s) => s.values[i]);
+    const speed = days ? daily.windSpeedMax[i] : hourly.windSpeed[i];
+    const gusts = days ? daily.windGustsMax[i] : hourly.windGusts[i];
     const dir = data.directions?.[i];
-    return `${when} · ${kmh(speed)}${dir == null ? "" : ` ${compassPoint(dir)}`} · rajadas ${kmh(gusts)}`;
+    return `${when} · ${formatSpeed(speed)}${dir == null ? "" : ` ${compassPoint(dir)}`} · rajadas ${formatSpeed(gusts)}`;
   }
 
   function pick(clientX: number) {
@@ -114,12 +116,12 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
         if (s.percent || (metric === "wind" && k > 0)) return [];
         const below = metric === "temperature" && k === 1;
         return s.values.flatMap((v, i) => {
-          if (v == null || (s.kind === "bar" && v < 0.05)) return [];
+          if (v == null || (s.kind === "bar" && v < convertPrecipitation(0.05))) return [];
           const text =
             metric === "temperature"
-              ? formatTemp(v)
+              ? `${Math.round(v)}°`
               : metric === "rain"
-                ? formatRain(v)
+                ? formatRainValue(v)
                 : formatNumber(v);
           return [{ key: `${k}-${i}`, i, v, text, below }];
         });
@@ -177,7 +179,7 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
             <div className="trends-axis" aria-hidden>
               {scale.ticks.map((v) => (
                 <span key={v} style={{ top: pct(y(v), H) }}>
-                  {formatNumber(v, Number.isInteger(v) ? 0 : 1).replace(".", ",")}
+                  {formatNumber(v, Number.isInteger(v) ? 0 : v < 0.1 ? 2 : 1).replace(".", ",")}
                 </span>
               ))}
             </div>

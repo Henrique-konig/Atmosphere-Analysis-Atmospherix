@@ -1,7 +1,7 @@
 import { CalendarDays } from "lucide-react";
 import { temperatureColor as rgb } from "@/lib/colors";
 import { describeWeather } from "@/lib/conditions";
-import { formatNumber, formatTemp, formatWeekday, present } from "@/lib/format";
+import { formatTemp, formatTempNumber, formatWeekday, present } from "@/lib/format";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import WeatherIcon from "./WeatherIcon";
@@ -45,7 +45,7 @@ export default function DailyCard({ forecast, onSelectDay }: Props) {
                 <span
                   className="range"
                   role="img"
-                  aria-label={`Mínima ${formatNumber(min)} graus, máxima ${formatNumber(max)} graus`}
+                  aria-label={`Mínima ${formatTempNumber(min)} graus, máxima ${formatTempNumber(max)} graus`}
                 >
                   {min != null && max != null && (
                     <span

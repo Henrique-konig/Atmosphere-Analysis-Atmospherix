@@ -63,6 +63,6 @@ describe("chartData", () => {
   it("carries the wind direction for the arrows", () => {
     const data = chartData(forecast, "wind", "days");
     expect(data.directions).toBe(forecast.daily.windDirectionDominant);
-    expect(data.series[1].values).toBe(forecast.daily.windGustsMax);
+    expect(data.series[1].values).toEqual(forecast.daily.windGustsMax);
   });
 });

@@ -1,4 +1,11 @@
-import { formatHour, formatWeekday, present } from "./format";
+import {
+  formatHour,
+  formatRainAmount,
+  formatSpeed,
+  formatTemp,
+  formatWeekday,
+  present,
+} from "./format";
 import type { Forecast } from "./types";
 
 export type RiskLevel = "atenção" | "alerta";
@@ -41,7 +48,7 @@ export function detectRisks(forecast: Forecast): Risk[] {
       level: hail || windy ? "alerta" : "atenção",
       title: hail ? "Tempestade com granizo" : windy ? "Tempestade com ventania" : "Tempestades",
       detail: windy
-        ? `Trovoadas com rajadas de até ${Math.round(stormGust)} km/h. Fique em local fechado e longe de árvores.`
+        ? `Trovoadas com rajadas de até ${formatSpeed(stormGust)}. Fique em local fechado e longe de árvores.`
         : "Trovoadas previstas. Evite áreas abertas e fique longe de árvores.",
       time: hourly.time[storm],
     });
@@ -59,8 +66,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
       title: "Chuva forte",
       detail:
         heavyHour >= 0
-          ? `Até ${Math.round(maxRainHour)} mm em uma hora. Risco de alagamentos.`
-          : `Acumulado de ${Math.round(daily.precipitationSum[heavyDay] ?? 0)} mm no dia. Risco de alagamentos.`,
+          ? `Até ${formatRainAmount(maxRainHour)} em uma hora. Risco de alagamentos.`
+          : `Acumulado de ${formatRainAmount(daily.precipitationSum[heavyDay] ?? 0)} no dia. Risco de alagamentos.`,
       time: heavyHour >= 0 ? hourly.time[heavyHour] : daily.time[heavyDay],
       allDay: heavyHour < 0,
     });
@@ -73,7 +80,7 @@ export function detectRisks(forecast: Forecast): Risk[] {
       id: "wind",
       level: maxGust >= 80 ? "alerta" : "atenção",
       title: maxGust >= 80 ? "Rajadas muito fortes" : "Rajadas fortes",
-      detail: `Rajadas de até ${Math.round(maxGust)} km/h. Cuidado com objetos soltos e árvores.`,
+      detail: `Rajadas de até ${formatSpeed(maxGust)}. Cuidado com objetos soltos e árvores.`,
       time: hourly.time[gust],
     });
   }
@@ -87,8 +94,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
     const feels = Math.max(-Infinity, ...present(hourly.apparentTemperature));
     const extreme = max >= 38 || feels >= 45;
     const parts = [
-      max >= 35 && `Máxima de ${Math.round(max)}°`,
-      feels >= 40 && feels > max && `sensação térmica de até ${Math.round(feels)}°`,
+      max >= 35 && `Máxima de ${formatTemp(max)}`,
+      feels >= 40 && feels > max && `sensação térmica de até ${formatTemp(feels)}`,
     ].filter(Boolean);
     risks.push({
       id: "heat",
@@ -107,8 +114,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
     const feels = Math.min(Infinity, ...present(hourly.apparentTemperature));
     const extreme = min <= 0 || feels <= -5;
     const parts = [
-      min <= 3 && `Mínima de ${Math.round(min)}°`,
-      feels <= 0 && feels < min && `sensação térmica de ${Math.round(feels)}°`,
+      min <= 3 && `Mínima de ${formatTemp(min)}`,
+      feels <= 0 && feels < min && `sensação térmica de ${formatTemp(feels)}`,
     ].filter(Boolean);
     risks.push({
       id: "cold",

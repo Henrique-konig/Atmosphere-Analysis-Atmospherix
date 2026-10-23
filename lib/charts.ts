@@ -1,4 +1,15 @@
 import type { Forecast } from "./types";
+import {
+  convertPrecipitation,
+  convertSpeed,
+  convertTemp,
+  precipitationUnit,
+  speedUnit,
+} from "./units";
+
+/** A series in the chosen display unit (forecasts arrive in °C, mm and km/h). */
+const inUnit = (values: (number | null)[], convert: (v: number) => number) =>
+  values.map((v) => (v == null ? null : convert(v)));
 
 export type Metric = "temperature" | "rain" | "wind";
 export type Period = "hours" | "days";
@@ -38,18 +49,33 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
       fromZero: false,
       series: hours
         ? [
-            { label: "Temperatura", values: h.temperature, kind: "line", tone: "tone-temp" },
+            {
+              label: "Temperatura",
+              values: inUnit(h.temperature, convertTemp),
+              kind: "line",
+              tone: "tone-temp",
+            },
             {
               label: "Sensação",
-              values: h.apparentTemperature,
+              values: inUnit(h.apparentTemperature, convertTemp),
               kind: "line",
               tone: "tone-feels",
               dashed: true,
             },
           ]
         : [
-            { label: "Máxima", values: d.temperatureMax, kind: "line", tone: "tone-max" },
-            { label: "Mínima", values: d.temperatureMin, kind: "line", tone: "tone-min" },
+            {
+              label: "Máxima",
+              values: inUnit(d.temperatureMax, convertTemp),
+              kind: "line",
+              tone: "tone-max",
+            },
+            {
+              label: "Mínima",
+              values: inUnit(d.temperatureMin, convertTemp),
+              kind: "line",
+              tone: "tone-min",
+            },
           ],
     };
   }
@@ -57,12 +83,12 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
   if (metric === "rain") {
     return {
       times,
-      unit: " mm",
+      unit: ` ${precipitationUnit()}`,
       fromZero: true,
       series: [
         {
           label: hours ? "Chuva por hora" : "Chuva no dia",
-          values: hours ? h.precipitation : d.precipitationSum,
+          values: inUnit(hours ? h.precipitation : d.precipitationSum, convertPrecipitation),
           kind: "bar",
           tone: "tone-rain",
         },
@@ -80,19 +106,19 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
 
   return {
     times,
-    unit: " km/h",
+    unit: ` ${speedUnit()}`,
     fromZero: true,
     directions: hours ? h.windDirection : d.windDirectionDominant,
     series: [
       {
         label: hours ? "Vento" : "Vento máximo",
-        values: hours ? h.windSpeed : d.windSpeedMax,
+        values: inUnit(hours ? h.windSpeed : d.windSpeedMax, convertSpeed),
         kind: "line",
         tone: "tone-wind",
       },
       {
         label: hours ? "Rajadas" : "Rajadas máximas",
-        values: hours ? h.windGusts : d.windGustsMax,
+        values: inUnit(hours ? h.windGusts : d.windGustsMax, convertSpeed),
         kind: "line",
         tone: "tone-gust",
         dashed: true,

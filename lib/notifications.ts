@@ -1,5 +1,5 @@
 import { describeWeather } from "./conditions";
-import { formatHour } from "./format";
+import { formatHour, formatRainAmount } from "./format";
 import { detectRisks } from "./risks";
 import type { Forecast } from "./types";
 
@@ -66,8 +66,7 @@ export function rainSoon(
     const details = [
       hourly.precipitationProbability[i] != null &&
         `${hourly.precipitationProbability[i]}% de chance`,
-      hourly.precipitation[i] != null &&
-        `${hourly.precipitation[i]!.toFixed(1).replace(".", ",")} mm`,
+      hourly.precipitation[i] != null && formatRainAmount(hourly.precipitation[i]),
     ].filter(Boolean);
     return {
       tag: `rain:${place.key}:${t}`,

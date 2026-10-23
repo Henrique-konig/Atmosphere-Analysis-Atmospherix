@@ -1,5 +1,7 @@
+import type { ThemePreference } from "./theme";
 import { DEFAULT_SETTINGS, type NotifySettings } from "./notifications";
 import type { Place } from "./types";
+import { isUnits, METRIC, type Units } from "./units";
 
 /** A place the user picked, or their device location. */
 export interface SavedPlace {
@@ -15,6 +17,8 @@ export interface SavedPlace {
 const SAVED_KEY = "atmospherix:places";
 const LAST_KEY = "atmospherix:last";
 const HERE_KEY = "atmospherix:here";
+const UNITS_KEY = "atmospherix:units";
+const THEME_KEY = "atmospherix:theme";
 const NOTIFY_KEY = "atmospherix:notify";
 const SENT_KEY = "atmospherix:notified";
 
@@ -44,6 +48,17 @@ export const storeLastPlace = (place: SavedPlace) => write(LAST_KEY, place);
 export const loadHere = () => read<SavedPlace | null>(HERE_KEY, null);
 export const storeHere = (place: SavedPlace) => write(HERE_KEY, place);
 
+export function loadUnits(): Units {
+  const units = read<unknown>(UNITS_KEY, null);
+  return isUnits(units) ? units : METRIC;
+}
+export const storeUnits = (units: Units) => write(UNITS_KEY, units);
+
+export function loadTheme(): ThemePreference {
+  const theme = read<unknown>(THEME_KEY, null);
+  return theme === "light" || theme === "dark" ? theme : "auto";
+}
+export const storeTheme = (theme: ThemePreference) => write(THEME_KEY, theme);
 export const loadNotifySettings = (): NotifySettings => ({
   ...DEFAULT_SETTINGS,
   ...read<Partial<NotifySettings>>(NOTIFY_KEY, {}),
