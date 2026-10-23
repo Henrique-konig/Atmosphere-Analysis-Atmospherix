@@ -31,6 +31,7 @@ import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import DayChart from "./DayChart";
 import HourDetails from "./HourDetails";
+import MoonDisc from "./MoonDisc";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
@@ -231,7 +232,11 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
               <p className="tile-value">
                 {d.humidity ? fromTo(d.humidity.min, d.humidity.max, "%") : MISSING}
               </p>
-              <p className="tile-text">Umidade relativa ao longo do dia.</p>
+              <p className="tile-text">
+                {d.dewPoint
+                  ? `Ponto de orvalho de ${fromTo(d.dewPoint.min, d.dewPoint.max, "°")}.`
+                  : "Umidade relativa ao longo do dia."}
+              </p>
             </Card>
             <Card title="Pressão" icon={Gauge} className="day-tile">
               <p className="tile-value">
@@ -244,21 +249,32 @@ export default function DaySheet({ forecast, day, onSelectDay, onClose }: Props)
                   : "Pressão média do dia."}
               </p>
             </Card>
-            <Card title="Sol" icon={Sunrise} className="day-tile tile-wide">
-              <dl className="wind-rows">
-                <div>
-                  <dt>Nascer</dt>
-                  <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
-                </div>
-                <div>
-                  <dt>Pôr do sol</dt>
-                  <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
-                </div>
-                <div>
-                  <dt>Duração do dia</dt>
-                  <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
-                </div>
-              </dl>
+            <Card title="Sol e Lua" icon={Sunrise} className="day-tile tile-wide moon">
+              <div className="moon-body">
+                <MoonDisc phase={d.moon.phase} latitude={forecast.latitude} label={d.moon.name} />
+                <dl className="wind-rows">
+                  <div>
+                    <dt>Nascer do sol</dt>
+                    <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
+                  </div>
+                  <div>
+                    <dt>Pôr do sol</dt>
+                    <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
+                  </div>
+                  <div>
+                    <dt>Duração do dia</dt>
+                    <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
+                  </div>
+                  <div>
+                    <dt>Lua</dt>
+                    <dd>{d.moon.name}</dd>
+                  </div>
+                  <div>
+                    <dt>Iluminação</dt>
+                    <dd>{Math.round(d.moon.illumination * 100)}%</dd>
+                  </div>
+                </dl>
+              </div>
             </Card>
           </div>
         </div>
