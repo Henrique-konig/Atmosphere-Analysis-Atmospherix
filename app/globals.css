@@ -1409,3 +1409,80 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Air quality and UV */
+.air {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  column-gap: 20px;
+}
+
+.air .card-title {
+  grid-column: 1 / -1;
+}
+
+.air-main {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.aqi-bar {
+  position: relative;
+  height: 5px;
+  margin: 12px 0 4px;
+  border-radius: 3px;
+  /* 0–50 good, 51–100 moderate, 101–150 sensitive, 151–200 unhealthy, 201–300 very unhealthy. */
+  background: linear-gradient(
+    90deg,
+    #34c759,
+    #34c759 14%,
+    #ffd60a 22%,
+    #ff9f0a 42%,
+    #ff453a 58%,
+    #bf5af2 80%,
+    #a2554f
+  );
+}
+
+.hourly-uv,
+.hourly-aqi {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.uv-moderate,
+.aqi-moderate {
+  color: #ffd60a;
+}
+
+.uv-high,
+.aqi-sensitive {
+  color: #ff9f0a;
+  font-weight: 600;
+}
+
+.uv-very-high,
+.aqi-unhealthy {
+  color: #ff6961;
+  font-weight: 600;
+}
+
+.uv-extreme,
+.aqi-very-unhealthy,
+.aqi-hazardous {
+  color: #d58cff;
+  font-weight: 600;
+}
+
+@media (max-width: 420px) {
+  .air {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .air-rows {
+    margin-top: 10px;
+  }
+}

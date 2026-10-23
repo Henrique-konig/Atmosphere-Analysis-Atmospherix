@@ -95,9 +95,25 @@ export interface TemperatureAverages {
   min: number;
 }
 
+/** US AQI (0–500) and pollutants (µg/m³), from the Open-Meteo air quality model (CAMS). */
+export interface AirQuality {
+  current: {
+    time: number;
+    aqi: number | null;
+    pm25: number | null;
+    pm10: number | null;
+    ozone: number | null;
+    nitrogenDioxide: number | null;
+  };
+  /** Hourly AQI for the next days, from local midnight today. */
+  hourly: { time: number[]; aqi: (number | null)[] };
+}
+
 export interface ForecastResponse {
   forecast: Forecast;
   averages: TemperatureAverages | null;
+  /** Optional like the averages: the forecast still loads when it fails. */
+  airQuality: AirQuality | null;
 }
 
 /** What the city list shows for each saved place. */

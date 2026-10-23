@@ -12,15 +12,17 @@ ou no computador, e pode ser instalado como app.
   hora (dia, noite, nublado, chuva, tempestade, neblina).
 - **Riscos nas próximas 48 horas**: tempestades, chuva forte, ventos fortes, calor, frio e geada,
   índice UV muito alto e neblina, estimados a partir da previsão.
-- **Previsão por hora** (24 h) com nascer e pôr do sol, e **previsão para 10 dias** com barras de
+- **Previsão por hora** (24 h) com nascer e pôr do sol, vento, chuva, índice UV e qualidade do ar
+  de cada hora, e **previsão para 10 dias** com barras de
   temperatura coloridas.
 - **Detalhes de cada dia**: toque em um dia da previsão de 10 dias para ver o gráfico de temperatura
   ao longo do dia com a chance de chuva por hora, a previsão hora a hora (com vento), chuva total,
-  sensação térmica, vento e rajadas, índice UV, umidade, pressão e nascer/pôr do sol. Dá para trocar
+  sensação térmica, vento e rajadas, índice UV, qualidade do ar (pior e melhor momento, nos
+  próximos 5 dias), umidade, pressão e nascer/pôr do sol. Dá para trocar
   de dia pela faixa de datas, deslizando para o lado ou com as setas do teclado.
 - **Mapa de precipitação** da região com a chuva prevista para as próximas 12 horas, animado (é
   previsão do modelo, não radar observado).
-- **Detalhes**: índice UV, nascer/pôr do sol com a trajetória do sol, vento com bússola, precipitação,
+- **Detalhes**: índice UV, qualidade do ar (índice americano com PM2,5, PM10, ozônio e NO₂), nascer/pôr do sol com a trajetória do sol, vento com bússola, precipitação,
   sensação térmica, umidade e ponto de orvalho, visibilidade, pressão com tendência, fase da lua
   (com iluminação e próxima lua cheia) e comparação com a **média histórica** de temperatura.
 - **Cidades**: busca com autocompletar e lista de cidades no estilo do Tempo do iPhone. Toda cidade
@@ -87,7 +89,8 @@ lib/                     Lógica pura: cliente Open-Meteo, riscos, lua, médias,
 tests/                   Testes unitários
 ```
 
-- `/api/forecast?lat=&lon=` faz duas chamadas em paralelo ao Open-Meteo: a previsão (atual, 48 h
+- `/api/forecast?lat=&lon=` faz três chamadas em paralelo ao Open-Meteo: a qualidade do ar (modelo
+  CAMS, 5 dias por hora; opcional como a média), a previsão (atual, 48 h
   por hora e 10 dias) e o arquivo histórico (reanálise ERA5) dos últimos 10 anos, de onde sai a
   média de máxima e mínima para a data de hoje (±3 dias), com cache de 24 h. Se a média falhar, a previsão é entregue sem ela.
 - Os riscos (`lib/risks.ts`), a fase da lua (`lib/moon.ts`) e os textos dos blocos
@@ -110,7 +113,8 @@ request ganha uma prévia própria antes do merge.
 
 - [ ] Radar meteorológico observado no mapa (RainViewer)
 - [ ] Alertas oficiais da Defesa Civil / INMET
-- [ ] Qualidade do ar e pólen
+- [x] Qualidade do ar
+- [ ] Pólen
 - [x] Instalar como app (PWA)
 - [ ] Notificações de chuva
 

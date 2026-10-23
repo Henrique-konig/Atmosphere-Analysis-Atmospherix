@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { averageForDate } from "@/lib/averages";
-import { describeWeather, pressureTrend, uvLevel } from "@/lib/conditions";
+import { aqiAt, aqiRange } from "@/lib/airquality";
+import { aqiLevel, describeWeather, pressureTrend, uvLevel, uvTone } from "@/lib/conditions";
 import {
   compassPoint,
   formatHour,
@@ -104,5 +105,39 @@ describe("formatRain", () => {
     expect(formatRain(0.02)).toBe("0");
     expect(formatRain(0.4)).toBe("0,4");
     expect(formatRain(12.6)).toBe("13");
+  });
+});
+
+describe("air quality", () => {
+  const air = {
+    current: { time: 0, aqi: 30, pm25: null, pm10: null, ozone: null, nitrogenDioxide: null },
+    hourly: { time: [0, 3600, 7200, 10800], aqi: [30, 120, null, 60] },
+  };
+
+  it("uses the US AQI categories", () => {
+    expect(aqiLevel(0).label).toBe("Boa");
+    expect(aqiLevel(50).tone).toBe("good");
+    expect(aqiLevel(51).label).toBe("Moderada");
+    expect(aqiLevel(150).tone).toBe("sensitive");
+    expect(aqiLevel(180).label).toBe("Ruim");
+    expect(aqiLevel(250).tone).toBe("very-unhealthy");
+    expect(aqiLevel(400).label).toBe("Perigosa");
+  });
+
+  it("finds the AQI of an hour and the range of a day", () => {
+    expect(aqiAt(air, 3600)).toBe(120);
+    expect(aqiAt(air, 7200)).toBeNull();
+    expect(aqiAt(air, 99)).toBeNull();
+    expect(aqiAt(null, 0)).toBeNull();
+    expect(aqiRange(air, 0, 10800)).toEqual({ min: 30, max: 120 });
+    expect(aqiRange(air, 7200, 7300)).toBeNull();
+  });
+
+  it("matches the UV colours to the UV levels", () => {
+    expect(uvTone(2)).toBe("low");
+    expect(uvTone(3)).toBe("moderate");
+    expect(uvTone(7)).toBe("high");
+    expect(uvTone(10)).toBe("very-high");
+    expect(uvTone(11)).toBe("extreme");
   });
 });

@@ -25,6 +25,7 @@ import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
 import RainMap from "./RainMap";
 import RiskBanner from "./RiskBanner";
+import AirQualityTile from "./tiles/AirQualityTile";
 import AveragesTile from "./tiles/AveragesTile";
 import MoonTile from "./tiles/MoonTile";
 import PrecipitationTile from "./tiles/PrecipitationTile";
@@ -240,7 +241,7 @@ export default function WeatherScreen() {
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
           <div className={`layout${loading ? " refreshing" : ""}`}>
             <RiskBanner risks={risks} timezone={forecast.timezone} now={forecast.current.time} />
-            <HourlyCard forecast={forecast} />
+            <HourlyCard forecast={forecast} airQuality={data.airQuality} />
             <div className="columns">
               <div className="col-main">
                 <DailyCard forecast={forecast} onSelectDay={setDay} />
@@ -265,6 +266,7 @@ export default function WeatherScreen() {
                   gusts={forecast.current.windGusts}
                   direction={forecast.current.windDirection}
                 />
+                <AirQualityTile air={data.airQuality} />
                 <PrecipitationTile forecast={forecast} />
                 <FeelsLikeTile
                   actual={forecast.current.temperature}
@@ -289,11 +291,13 @@ export default function WeatherScreen() {
             </div>
           </div>
           <footer className="footer">
-            Dados: <a href="https://open-meteo.com/">Open-Meteo</a> · Mapa: Esri, OpenStreetMap ·{" "}
+            Dados: <a href="https://open-meteo.com/">Open-Meteo</a> (qualidade do ar: CAMS) · Mapa:
+            Esri, OpenStreetMap ·{" "}
             <a href="https://github.com/Henrique-konig/Atmosphere-Analysis-Atmospherix">Código</a>
           </footer>
           <DaySheet
             forecast={forecast}
+            airQuality={data.airQuality}
             day={day}
             onSelectDay={setDay}
             onClose={() => setDay(null)}
