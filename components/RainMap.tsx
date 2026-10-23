@@ -11,6 +11,7 @@ import { BASEMAP } from "@/lib/basemap";
 import { cssGradient, PRECIPITATION_SCALE } from "@/lib/colors";
 import { formatHour, formatTime } from "@/lib/format";
 import { gridStep } from "@/lib/grid";
+import { t } from "@/lib/i18n";
 import {
   buildTimeline,
   RADAR_ATTRIBUTION,
@@ -40,7 +41,7 @@ interface Handles {
 }
 
 function frameLabel(frame: TimelineFrame, isNow: boolean, timezone: string): string {
-  if (isNow) return "Agora";
+  if (isNow) return t("common.now");
   return frame.kind === "radar"
     ? formatTime(frame.time, timezone)
     : formatHour(frame.time, timezone);
@@ -182,28 +183,29 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
 
   return (
     <Card
-      title={hasRadar ? "Radar de chuva" : "Previsão de chuva"}
+      title={hasRadar ? t("rain.radarTitle") : t("rain.title")}
       icon={CloudRain}
       className="rain-map"
     >
-      <p className="card-summary">
-        {hasRadar
-          ? "Radar das últimas 2 horas e, em seguida, a previsão do modelo para as próximas horas."
-          : "Previsão do modelo para a região, não é radar. Pancadas isoladas podem não aparecer."}
-      </p>
+      <p className="card-summary">{hasRadar ? t("rain.radarSummary") : t("rain.summary")}</p>
       <div className="rain-map-frame">
         <div
           ref={containerRef}
           className="rain-map-canvas"
-          aria-label="Mapa de radar e previsão de chuva da região"
+          role="img"
+          aria-label={t("rain.mapLabel")}
         />
-        {steps === 0 && <div className="rain-map-status">Carregando…</div>}
-        {frame && (
-          <div className={`rain-map-kind ${frame.kind}`}>
-            {frame.kind === "radar" ? "Radar" : "Previsão"}
+        {steps === 0 && (
+          <div className="rain-map-status" role="status">
+            {t("app.loading")}
           </div>
         )}
-        {noRainForecast && <div className="rain-map-badge">Sem chuva prevista na região</div>}
+        {frame && (
+          <div className={`rain-map-kind ${frame.kind}`}>
+            {frame.kind === "radar" ? t("rain.radar") : t("rain.forecast")}
+          </div>
+        )}
+        {noRainForecast && <div className="rain-map-badge">{t("rain.none")}</div>}
       </div>
       {frame && (
         <div className="rain-map-controls">
@@ -215,7 +217,8 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
               if (!playing && current === timeline.now && hasRadar) setStep(0);
               setPlaying((p) => !p);
             }}
-            aria-label={playing ? "Pausar" : "Animar radar e próximas horas"}
+            aria-label={playing ? t("rain.pause") : t("rain.play")}
+            aria-pressed={playing}
           >
             {playing ? <Pause size={16} aria-hidden /> : <Play size={16} aria-hidden />}
           </button>
@@ -229,8 +232,8 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
                 setPlaying(false);
                 setStep(Number(e.target.value));
               }}
-              aria-label="Momento do radar ou da previsão de chuva"
-              aria-valuetext={`${frame.kind === "radar" ? "Radar" : "Previsão"} ${label}`}
+              aria-label={t("rain.hour")}
+              aria-valuetext={`${frame.kind === "radar" ? t("rain.radar") : t("rain.forecast")} ${label}`}
             />
             {hasRadar && steps > 1 && (
               <div
@@ -240,11 +243,13 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
               />
             )}
           </div>
-          <span className="rain-map-time">{label}</span>
+          <span className="rain-map-time" aria-hidden>
+            {label}
+          </span>
         </div>
       )}
-      <div className="rain-legend">
-        <span>Fraca</span>
+      <div className="rain-legend" aria-hidden>
+        <span>{t("rain.light")}</span>
         <span
           className="rain-legend-bar"
           style={{
@@ -252,7 +257,7 @@ export default function RainMap({ latitude, longitude, timezone }: Props) {
               frame?.kind === "radar" ? RADAR_LEGEND_GRADIENT : cssGradient(PRECIPITATION_SCALE),
           }}
         />
-        <span>Forte</span>
+        <span>{t("rain.heavy")}</span>
       </div>
     </Card>
   );

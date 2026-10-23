@@ -2,6 +2,7 @@
 
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { t } from "@/lib/i18n";
 
 interface Props {
   className: string;
@@ -78,7 +79,7 @@ export default function ScrollStrip({
           type="button"
           className="strip-arrow strip-arrow-left"
           onClick={() => scrollBy(-1)}
-          aria-label="Horas anteriores"
+          aria-label={t("hourly.previous")}
         >
           <ChevronLeft size={16} aria-hidden />
         </button>
@@ -88,7 +89,7 @@ export default function ScrollStrip({
           type="button"
           className="strip-arrow strip-arrow-right"
           onClick={() => scrollBy(1)}
-          aria-label="Próximas horas"
+          aria-label={t("hourly.next")}
         >
           <ChevronRight size={16} aria-hidden />
         </button>

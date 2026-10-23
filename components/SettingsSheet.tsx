@@ -1,9 +1,11 @@
 "use client";
 
 import { Settings2, X } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
+import { LOCALES, t, type Locale } from "@/lib/i18n";
 import type { ThemePreference } from "@/lib/theme";
 import type { Units } from "@/lib/units";
+import { useLocale } from "./LocaleProvider";
 
 interface Props {
   open: boolean;
@@ -17,6 +19,8 @@ interface Props {
 interface Option<T extends string> {
   value: T;
   label: string;
+  /** Language of the label, when it differs from the page (language names). */
+  lang?: string;
 }
 
 /** A row of radio buttons styled as an iOS segmented control. */
@@ -46,7 +50,7 @@ function Segmented<T extends string>({
               checked={value === o.value}
               onChange={() => onChange(o.value)}
             />
-            <span>{o.label}</span>
+            <span lang={o.lang}>{o.label}</span>
           </label>
         ))}
       </div>
@@ -57,6 +61,8 @@ function Segmented<T extends string>({
 export default function SettingsSheet(props: Props) {
   const { open, units, theme, onClose, onUnitsChange, onThemeChange } = props;
   const dialogRef = useRef<HTMLDialogElement>(null);
+  const titleId = useId();
+  const { locale, change } = useLocale();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -69,34 +75,46 @@ export default function SettingsSheet(props: Props) {
     <dialog
       ref={dialogRef}
       className="sheet settings-sheet"
-      aria-label="Ajustes"
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => e.target === dialogRef.current && onClose()}
     >
       <div className="sheet-body">
         <header className="sheet-header">
-          <h2>
-            <Settings2 size={22} aria-hidden /> Ajustes
+          <h2 id={titleId}>
+            <Settings2 size={22} aria-hidden /> {t("settings.title")}
           </h2>
-          <button type="button" className="round-button" onClick={onClose} aria-label="Fechar">
+          <button
+            type="button"
+            className="round-button"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <X size={18} aria-hidden />
           </button>
         </header>
 
+        <Segmented<Locale>
+          name="language"
+          legend={t("app.language")}
+          value={locale}
+          onChange={change}
+          options={LOCALES.map((l) => ({ value: l.code, label: l.name, lang: l.tag }))}
+        />
         <Segmented
           name="theme"
-          legend="Tema"
+          legend={t("settings.theme")}
           value={theme}
           onChange={onThemeChange}
           options={[
-            { value: "auto", label: "Automático" },
-            { value: "light", label: "Claro" },
-            { value: "dark", label: "Escuro" },
+            { value: "auto", label: t("settings.auto") },
+            { value: "light", label: t("settings.light") },
+            { value: "dark", label: t("settings.dark") },
           ]}
         />
         <Segmented
           name="temperature"
-          legend="Temperatura"
+          legend={t("settings.temperature")}
           value={units.temperature}
           onChange={(temperature) => onUnitsChange({ ...units, temperature })}
           options={[
@@ -106,7 +124,7 @@ export default function SettingsSheet(props: Props) {
         />
         <Segmented
           name="speed"
-          legend="Vento"
+          legend={t("common.wind")}
           value={units.speed}
           onChange={(speed) => onUnitsChange({ ...units, speed })}
           options={[
@@ -116,17 +134,15 @@ export default function SettingsSheet(props: Props) {
         />
         <Segmented
           name="precipitation"
-          legend="Chuva"
+          legend={t("day.rain")}
           value={units.precipitation}
           onChange={(precipitation) => onUnitsChange({ ...units, precipitation })}
           options={[
-            { value: "mm", label: "Milímetros (mm)" },
-            { value: "in", label: "Polegadas (in)" },
+            { value: "mm", label: t("settings.mm") },
+            { value: "in", label: t("settings.in") },
           ]}
         />
-        <p className="sheet-hint">
-          Os ajustes ficam salvos neste aparelho. Com mph, a visibilidade aparece em milhas.
-        </p>
+        <p className="sheet-hint">{t("settings.hint")}</p>
       </div>
     </dialog>
   );

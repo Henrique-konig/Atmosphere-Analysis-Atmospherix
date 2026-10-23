@@ -17,11 +17,11 @@ interface GeocodingResult {
   country_code?: string;
 }
 
-export async function searchPlaces(query: string, limit = 6): Promise<Place[]> {
+export async function searchPlaces(query: string, limit = 6, language = "pt"): Promise<Place[]> {
   const params = new URLSearchParams({
     name: query,
     count: String(limit),
-    language: "pt",
+    language,
     format: "json",
   });
   const res = await fetch(`${BASE_URL}?${params}`, { next: { revalidate: REVALIDATE_SECONDS } });

@@ -6,6 +6,7 @@ import { chartData, linePath, niceScale, type Metric, type Period } from "@/lib/
 import {
   compassPoint,
   formatDayOfMonth,
+  formatDecimal,
   formatHour,
   formatNumber,
   formatRainAmount,
@@ -13,8 +14,10 @@ import {
   formatSpeed,
   formatTemp,
   formatWeekday,
+  localHour,
   present,
 } from "@/lib/format";
+import { t as tr, type MessageKey } from "@/lib/i18n";
 import type { Forecast } from "@/lib/types";
 import { convertPrecipitation, convertSpeed } from "@/lib/units";
 import Card from "./Card";
@@ -25,16 +28,14 @@ const H = 200;
 const TOP = 14;
 const BOTTOM = 196;
 
-const METRICS: { id: Metric; label: string }[] = [
-  { id: "temperature", label: "Temperatura" },
-  { id: "rain", label: "Chuva" },
-  { id: "wind", label: "Vento" },
+const METRICS: { id: Metric; label: MessageKey }[] = [
+  { id: "temperature", label: "settings.temperature" },
+  { id: "rain", label: "day.rain" },
+  { id: "wind", label: "common.wind" },
 ];
-
-/** Local hour of a timestamp, 0–23. */
-const localHour = (t: number, tz: string) => Number.parseInt(formatHour(t, tz), 10);
 const pct = (v: number, of: number) => `${(v / of) * 100}%`;
-const chance = (v: number | null) => (v == null ? "" : ` · ${Math.round(v)}% de chance`);
+const chance = (v: number | null) =>
+  v == null ? "" : ` · ${tr("charts.chance", { prob: Math.round(v) })}`;
 
 /** Temperature, rain and wind as charts, for the next 48 hours or the forecast days. */
 export default function TrendsCard({ forecast }: { forecast: Forecast }) {
@@ -60,12 +61,13 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
   const y = (v: number) => BOTTOM - ((v - scale.lo) / (scale.hi - scale.lo)) * (BOTTOM - TOP);
   const yPercent = (v: number) => BOTTOM - (v / 100) * (BOTTOM - TOP);
 
-  const dayLabel = (i: number) => (i === 0 ? "Hoje" : formatWeekday(data.times[i], timezone));
+  const dayLabel = (i: number) =>
+    i === 0 ? tr("common.today") : formatWeekday(data.times[i], timezone);
   const pointLabel = (i: number) =>
     days
       ? dayLabel(i)
       : i === 0
-        ? "Agora"
+        ? tr("common.now")
         : formatDayOfMonth(data.times[i], timezone) === formatDayOfMonth(data.times[0], timezone)
           ? formatHour(data.times[i], timezone)
           : `${formatWeekday(data.times[i], timezone)}, ${formatHour(data.times[i], timezone)}`;
@@ -89,8 +91,8 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
         : pointLabel(i);
     if (metric === "temperature") {
       return days
-        ? `${when} · máx. ${formatTemp(daily.temperatureMax[i])} · mín. ${formatTemp(daily.temperatureMin[i])}`
-        : `${when} · ${formatTemp(hourly.temperature[i])} · sensação ${formatTemp(hourly.apparentTemperature[i])}`;
+        ? `${when} · ${tr("charts.max", { temp: formatTemp(daily.temperatureMax[i]) })} · ${tr("charts.min", { temp: formatTemp(daily.temperatureMin[i]) })}`
+        : `${when} · ${formatTemp(hourly.temperature[i])} · ${tr("charts.feels", { temp: formatTemp(hourly.apparentTemperature[i]) })}`;
     }
     if (metric === "rain") {
       const mm = days ? daily.precipitationSum[i] : hourly.precipitation[i];
@@ -100,7 +102,7 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
     const speed = days ? daily.windSpeedMax[i] : hourly.windSpeed[i];
     const gusts = days ? daily.windGustsMax[i] : hourly.windGusts[i];
     const dir = data.directions?.[i];
-    return `${when} · ${formatSpeed(speed)}${dir == null ? "" : ` ${compassPoint(dir)}`} · rajadas ${formatSpeed(gusts)}`;
+    return `${when} · ${formatSpeed(speed)}${dir == null ? "" : ` ${compassPoint(dir)}`} · ${tr("charts.gusts", { speed: formatSpeed(gusts) })}`;
   }
 
   function pick(clientX: number) {
@@ -132,9 +134,9 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
   const dry = metric === "rain" && top < 0.05;
 
   return (
-    <Card title="Gráficos" icon={ChartLine} className="trends">
+    <Card title={tr("charts.title")} icon={ChartLine} className="trends">
       <div className="trends-controls">
-        <div className="segmented" role="group" aria-label="Gráfico">
+        <div className="segmented" role="group" aria-label={tr("charts.chart")}>
           {METRICS.map((m) => (
             <button
               key={m.id}
@@ -142,15 +144,15 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
               aria-pressed={metric === m.id}
               onClick={() => setMetric(m.id)}
             >
-              {m.label}
+              {tr(m.label)}
             </button>
           ))}
         </div>
-        <div className="segmented" role="group" aria-label="Período">
+        <div className="segmented" role="group" aria-label={tr("charts.period")}>
           {(
             [
               ["hours", `${hourly.time.length} h`],
-              ["days", `${daily.time.length} dias`],
+              ["days", tr("charts.days", { days: daily.time.length })],
             ] as const
           ).map(([id, label]) => (
             <button
@@ -169,7 +171,7 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
       </div>
 
       {values.length === 0 ? (
-        <p className="card-note">Sem dados para este gráfico.</p>
+        <p className="card-note">{tr("charts.noData")}</p>
       ) : (
         <>
           <p className="trends-readout" aria-live="polite">
@@ -179,7 +181,7 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
             <div className="trends-axis" aria-hidden>
               {scale.ticks.map((v) => (
                 <span key={v} style={{ top: pct(y(v), H) }}>
-                  {formatNumber(v, Number.isInteger(v) ? 0 : v < 0.1 ? 2 : 1).replace(".", ",")}
+                  {formatDecimal(v, Number.isInteger(v) ? 0 : v < 0.1 ? 2 : 1)}
                 </span>
               ))}
             </div>
@@ -188,7 +190,9 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
               className="trends-plot"
               role="img"
               tabIndex={0}
-              aria-label={`Gráfico de ${METRICS.find((m) => m.id === metric)!.label.toLowerCase()}. Use as setas para percorrer.`}
+              aria-label={tr("charts.plotLabel", {
+                metric: tr(METRICS.find((m) => m.id === metric)!.label).toLowerCase(),
+              })}
               onPointerDown={(e) => pick(e.clientX)}
               onPointerMove={(e) => {
                 if (e.pointerType === "mouse" || e.buttons) pick(e.clientX);
@@ -305,11 +309,11 @@ export default function TrendsCard({ forecast }: { forecast: Forecast }) {
             ))}
             {arrows.length > 0 && (
               <li>
-                <ArrowUp size={12} strokeWidth={2.5} aria-hidden /> Para onde o vento sopra
+                <ArrowUp size={12} strokeWidth={2.5} aria-hidden /> {tr("charts.windArrow")}
               </li>
             )}
           </ul>
-          {dry && <p className="card-note">Sem chuva prevista no período.</p>}
+          {dry && <p className="card-note">{tr("charts.dry")}</p>}
         </>
       )}
     </Card>

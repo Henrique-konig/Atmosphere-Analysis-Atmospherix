@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import { LocaleProvider } from "./LocaleProvider";
 
 // The screen reads localStorage and the geolocation API, so it only renders in the browser.
 const WeatherScreen = dynamic(() => import("./WeatherScreen"), {
@@ -15,5 +16,9 @@ const WeatherScreen = dynamic(() => import("./WeatherScreen"), {
 });
 
 export default function ClientApp() {
-  return <WeatherScreen />;
+  return (
+    <LocaleProvider>
+      <WeatherScreen />
+    </LocaleProvider>
+  );
 }

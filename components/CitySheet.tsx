@@ -6,9 +6,11 @@ import { placeKey, usePlaceSummaries } from "@/hooks/usePlaceSummaries";
 import { usePlaceSearch } from "@/hooks/usePlaceSearch";
 import { describeWeather } from "@/lib/conditions";
 import { formatTemp, formatTime } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { placeDetails } from "@/lib/places";
 import { fromSearch, samePlace, type SavedPlace } from "@/lib/storage";
 import type { PlaceSummary } from "@/lib/types";
+import { useLocale } from "./LocaleProvider";
 
 interface Props {
   open: boolean;
@@ -40,10 +42,12 @@ export default function CitySheet(props: Props) {
   const listed = useMemo(() => (here ? [here, ...saved] : saved), [here, saved]);
   const { summaries, now } = usePlaceSummaries(listed, open);
   const [query, setQuery] = useState("");
-  const { places, error, loading } = usePlaceSearch(query);
+  const { locale } = useLocale();
+  const { places, error, loading } = usePlaceSearch(query, locale);
   const inputRef = useRef<HTMLInputElement>(null);
   const dialogRef = useRef<HTMLDialogElement>(null);
   const listId = useId();
+  const titleId = useId();
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -62,7 +66,7 @@ export default function CitySheet(props: Props) {
     <dialog
       ref={dialogRef}
       className="sheet"
-      aria-label="Escolher cidade"
+      aria-labelledby={titleId}
       onClose={() => {
         setQuery("");
         onClose();
@@ -71,8 +75,13 @@ export default function CitySheet(props: Props) {
     >
       <div className="sheet-body">
         <header className="sheet-header">
-          <h2>Cidades</h2>
-          <button type="button" className="round-button" onClick={onClose} aria-label="Fechar">
+          <h2 id={titleId}>{t("cities.title")}</h2>
+          <button
+            type="button"
+            className="round-button"
+            onClick={onClose}
+            aria-label={t("common.close")}
+          >
             <X size={18} aria-hidden />
           </button>
         </header>
@@ -82,7 +91,8 @@ export default function CitySheet(props: Props) {
           <input
             ref={inputRef}
             type="search"
-            placeholder="Buscar cidade"
+            placeholder={t("cities.search")}
+            aria-label={t("cities.search")}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             aria-controls={listId}
@@ -91,11 +101,16 @@ export default function CitySheet(props: Props) {
         </label>
 
         {searching ? (
-          <ul id={listId} className="sheet-list" aria-label="Resultados">
-            {loading && <li className="sheet-status">Buscando…</li>}
+          <ul
+            id={listId}
+            className="sheet-list"
+            aria-label={t("cities.results")}
+            aria-live="polite"
+          >
+            {loading && <li className="sheet-status">{t("cities.searching")}</li>}
             {error && <li className="sheet-status error">{error}</li>}
             {!loading && !error && places.length === 0 && (
-              <li className="sheet-status">Nenhuma cidade encontrada</li>
+              <li className="sheet-status">{t("cities.notFound")}</li>
             )}
             {places.map((place) => (
               <li key={place.id}>
@@ -126,11 +141,15 @@ export default function CitySheet(props: Props) {
                 ) : (
                   <Navigation size={16} aria-hidden />
                 )}
-                Usar minha localização
+                {t("cities.useLocation")}
               </button>
             )}
-            {locateError && <p className="sheet-status error">{locateError}</p>}
-            <ul className="city-list" aria-label="Cidades favoritas">
+            {locateError && (
+              <p className="sheet-status error" role="alert">
+                {locateError}
+              </p>
+            )}
+            <ul className="city-list" aria-label={t("cities.saved")}>
               {here && (
                 <CityCard
                   place={here}
@@ -157,9 +176,7 @@ export default function CitySheet(props: Props) {
               ))}
             </ul>
             <p className="sheet-hint">
-              {saved.length === 0
-                ? "Busque uma cidade e toque na estrela no topo da tela para salvá-la aqui."
-                : "Suas cidades favoritas ficam salvas neste aparelho. Toque em uma para ver a previsão."}
+              {saved.length === 0 ? t("cities.hintEmpty") : t("cities.hint")}
             </p>
           </>
         )}
@@ -195,7 +212,7 @@ function CityCard({ place, summary, now, active, onSelect, onRemove }: CardProps
         <span className="city-card-left">
           <strong className="city-card-name">
             {place.current && <Navigation size={14} aria-hidden />}
-            {place.current ? "Minha localização" : place.name}
+            {place.current ? t("app.myLocation") : place.name}
           </strong>
           <small>{sub}</small>
           <span className="city-card-condition">{condition?.label ?? ""}</span>
@@ -204,7 +221,8 @@ function CityCard({ place, summary, now, active, onSelect, onRemove }: CardProps
           <span className="city-card-temp">{summary ? formatTemp(summary.temperature) : ""}</span>
           {summary && (
             <small>
-              Máx.: {formatTemp(summary.max)} Mín.: {formatTemp(summary.min)}
+              {t("cities.max", { temp: formatTemp(summary.max) })}{" "}
+              {t("cities.min", { temp: formatTemp(summary.min) })}
             </small>
           )}
         </span>
@@ -214,7 +232,7 @@ function CityCard({ place, summary, now, active, onSelect, onRemove }: CardProps
           type="button"
           className="round-button subtle city-card-remove"
           onClick={onRemove}
-          aria-label={`Remover ${place.name} dos favoritos`}
+          aria-label={t("favorites.remove", { name: place.name })}
         >
           <Trash2 size={15} aria-hidden />
         </button>

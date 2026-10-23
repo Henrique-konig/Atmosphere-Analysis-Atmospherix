@@ -1,6 +1,7 @@
 import { Droplet, Eye, Thermometer } from "lucide-react";
 import { feelsLikeLabel, humidityLabel, visibilityLabel } from "@/lib/conditions";
 import { distanceUnit, formatDistanceNumber, formatNumber, formatTemp } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import Card from "../Card";
 
 export function FeelsLikeTile({
@@ -13,7 +14,7 @@ export function FeelsLikeTile({
   humidity: number | null;
 }) {
   return (
-    <Card title="Sensação" icon={Thermometer} className="tile">
+    <Card title={t("feels.title")} icon={Thermometer} className="tile">
       <p className="tile-value">{formatTemp(feels)}</p>
       {actual != null && feels != null && (
         <p className="tile-text">{feelsLikeLabel(actual, feels, humidity)}</p>
@@ -30,7 +31,7 @@ export function HumidityTile({
   dewPoint: number | null;
 }) {
   return (
-    <Card title="Umidade" icon={Droplet} className="tile">
+    <Card title={t("humidity.title")} icon={Droplet} className="tile">
       <p className="tile-value">
         {formatNumber(humidity)}
         {humidity != null && "%"}
@@ -38,7 +39,11 @@ export function HumidityTile({
       <div
         className="meter"
         role="img"
-        aria-label={humidity == null ? "Umidade indisponível" : `Umidade ${Math.round(humidity)}%`}
+        aria-label={
+          humidity == null
+            ? t("humidity.unavailable")
+            : t("humidity.value", { value: Math.round(humidity) })
+        }
       >
         {humidity != null && <span style={{ width: `${Math.min(100, humidity)}%` }} />}
       </div>
@@ -50,7 +55,7 @@ export function HumidityTile({
 export function VisibilityTile({ meters }: { meters: number | null }) {
   const km = meters == null ? null : meters / 1000;
   return (
-    <Card title="Visibilidade" icon={Eye} className="tile">
+    <Card title={t("visibility.title")} icon={Eye} className="tile">
       <p className="tile-value">
         {formatDistanceNumber(km)} {km != null && <small>{distanceUnit()}</small>}
       </p>

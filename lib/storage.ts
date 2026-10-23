@@ -91,3 +91,7 @@ export function toggleFavorite(list: SavedPlace[], place: SavedPlace): SavedPlac
 export function fromSearch(place: Place, detail: string): SavedPlace {
   return { name: place.name, detail, latitude: place.latitude, longitude: place.longitude };
 }
+
+const LOCALE_KEY = "atmospherix:locale";
+export const loadLocale = () => read<string | null>(LOCALE_KEY, null);
+export const storeLocale = (locale: string) => write(LOCALE_KEY, locale);

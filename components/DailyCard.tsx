@@ -2,6 +2,7 @@ import { CalendarDays } from "lucide-react";
 import { temperatureColor as rgb } from "@/lib/colors";
 import { describeWeather } from "@/lib/conditions";
 import { formatTemp, formatTempNumber, formatWeekday, present } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { Forecast } from "@/lib/types";
 import Card from "./Card";
 import WeatherIcon from "./WeatherIcon";
@@ -20,12 +21,26 @@ export default function DailyCard({ forecast, onSelectDay }: Props) {
   const pct = (t: number) => ((t - low) / span) * 100;
 
   return (
-    <Card title={`Previsão para ${daily.time.length} dias`} icon={CalendarDays} className="daily">
+    <Card
+      title={t("daily.title", { days: daily.time.length })}
+      icon={CalendarDays}
+      className="daily"
+    >
       <ol className="daily-list">
         {daily.time.map((time, i) => {
           const min = daily.temperatureMin[i];
           const max = daily.temperatureMax[i];
           const prob = daily.precipitationProbabilityMax[i];
+          const name = i === 0 ? t("common.today") : formatWeekday(time, timezone);
+          const condition = describeWeather(daily.weatherCode[i]);
+          const label = [
+            name,
+            condition.label,
+            t("common.minMax", { min: formatTempNumber(min), max: formatTempNumber(max) }),
+            prob != null && prob >= 20 ? t("hourly.rainChance", { prob }) : null,
+          ]
+            .filter(Boolean)
+            .join(", ");
           return (
             <li key={time}>
               <button
@@ -33,20 +48,15 @@ export default function DailyCard({ forecast, onSelectDay }: Props) {
                 className="daily-row"
                 onClick={() => onSelectDay(i)}
                 aria-haspopup="dialog"
+                aria-label={label}
               >
-                <span className="daily-day">
-                  {i === 0 ? "Hoje" : formatWeekday(time, timezone)}
-                </span>
+                <span className="daily-day">{name}</span>
                 <span className="daily-icon">
-                  <WeatherIcon kind={describeWeather(daily.weatherCode[i]).icon} size={22} />
+                  <WeatherIcon kind={condition.icon} size={22} />
                   {prob != null && prob >= 20 && <span className="daily-prob">{prob}%</span>}
                 </span>
                 <span className="daily-min">{formatTemp(min)}</span>
-                <span
-                  className="range"
-                  role="img"
-                  aria-label={`Mínima ${formatTempNumber(min)} graus, máxima ${formatTempNumber(max)} graus`}
-                >
+                <span className="range">
                   {min != null && max != null && (
                     <span
                       className="range-fill"
@@ -70,7 +80,7 @@ export default function DailyCard({ forecast, onSelectDay }: Props) {
           );
         })}
       </ol>
-      <p className="card-note">Toque em um dia para ver a previsão detalhada.</p>
+      <p className="card-note">{t("daily.hint")}</p>
     </Card>
   );
 }

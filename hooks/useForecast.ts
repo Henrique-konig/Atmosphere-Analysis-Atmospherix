@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { forecastKey, loadCachedForecast, storeCachedForecast } from "@/lib/forecastCache";
+import { t } from "@/lib/i18n";
 import type { ForecastResponse } from "@/lib/types";
 
 /** Refresh in the background so an open tab stays current. */
 const REFRESH_MS = 10 * 60 * 1000;
 /** Set by the service worker on responses it served from its cache. */
 const SAVED_AT_HEADER = "x-atmospherix-saved-at";
-const OFFLINE = "Sem conexão com a internet.";
+/** Marks a network failure; translated only when shown, so it follows the language. */
+const OFFLINE = "offline";
 
 interface Result {
   key: string;
@@ -51,7 +53,7 @@ export function useForecast(coords: { lat: number; lon: number } | null) {
     fetch(`/api/forecast?lat=${lat}&lon=${lon}`, { signal: controller.signal })
       .then(async (res) => {
         const json = await res.json();
-        if (!res.ok) throw new Error(json.error ?? "Falha ao carregar a previsão");
+        if (!res.ok) throw new Error(json.error ?? t("error.forecast"));
         const data = json as ForecastResponse;
         const swSavedAt = Number(res.headers.get(SAVED_AT_HEADER));
         if (swSavedAt) {
@@ -70,7 +72,7 @@ export function useForecast(coords: { lat: number; lon: number } | null) {
             ? OFFLINE
             : err instanceof Error
               ? err.message
-              : "Falha ao carregar a previsão";
+              : t("error.forecast");
         setResult((prev) =>
           prev.key === key && prev.data
             ? { ...prev, error: message, fromCache: true }
@@ -102,7 +104,7 @@ export function useForecast(coords: { lat: number; lon: number } | null) {
   const error = current ? result.error : null;
   return {
     data,
-    error,
+    error: error === OFFLINE ? t("error.offline") : error,
     loading: Boolean(key) && (!current || (!result.data && !result.error)),
     /** When the shown data was fetched, in milliseconds. */
     savedAt: live?.savedAt ?? cached?.savedAt ?? null,

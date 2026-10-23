@@ -1,5 +1,6 @@
 import { ChartNoAxesColumn } from "lucide-react";
 import { formatTemp, MISSING } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import { convertTempDelta } from "@/lib/units";
 import type { TemperatureAverages } from "@/lib/types";
 import Card from "../Card";
@@ -13,37 +14,42 @@ export default function AveragesTile({
 }) {
   if (!averages) {
     return (
-      <Card title="Média" icon={ChartNoAxesColumn} className="tile">
-        <p className="tile-text">Médias históricas indisponíveis para este local.</p>
+      <Card title={t("averages.title")} icon={ChartNoAxesColumn} className="tile">
+        <p className="tile-text">{t("averages.unavailable")}</p>
       </Card>
     );
   }
   const diff = todayMax == null ? null : Math.round(convertTempDelta(todayMax - averages.max));
   const headline =
-    diff == null ? MISSING : diff === 0 ? "Na média" : `${diff > 0 ? "+" : ""}${diff}°`;
+    diff == null
+      ? MISSING
+      : diff === 0
+        ? t("averages.onAverage")
+        : `${diff > 0 ? "+" : ""}${diff}°`;
   return (
-    <Card title="Média" icon={ChartNoAxesColumn} className="tile">
+    <Card title={t("averages.title")} icon={ChartNoAxesColumn} className="tile">
       <p className="tile-value">{headline}</p>
       <p className="tile-label">
         {diff == null || diff === 0
-          ? "máxima de hoje"
+          ? t("averages.todayMax")
           : diff > 0
-            ? "acima da máxima média"
-            : "abaixo da máxima média"}
+            ? t("averages.above")
+            : t("averages.below")}
       </p>
       <dl className="avg-rows">
         <div>
-          <dt>Hoje</dt>
-          <dd>Máx. {formatTemp(todayMax)}</dd>
+          <dt>{t("common.today")}</dt>
+          <dd>{t("averages.max", { temp: formatTemp(todayMax) })}</dd>
         </div>
         <div>
-          <dt>Média</dt>
+          <dt>{t("averages.title")}</dt>
           <dd>
-            Máx. {formatTemp(averages.max)} · Mín. {formatTemp(averages.min)}
+            {t("averages.max", { temp: formatTemp(averages.max) })} ·{" "}
+            {t("averages.min", { temp: formatTemp(averages.min) })}
           </dd>
         </div>
       </dl>
-      <p className="tile-text">Média dos últimos {averages.years} anos para esta data.</p>
+      <p className="tile-text">{t("averages.years", { years: averages.years })}</p>
     </Card>
   );
 }

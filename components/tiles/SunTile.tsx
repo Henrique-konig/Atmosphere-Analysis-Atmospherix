@@ -1,5 +1,6 @@
 import { Sunrise, Sunset } from "lucide-react";
 import { formatDuration, formatTime, MISSING } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import Card from "../Card";
 
 interface Props {
@@ -16,9 +17,9 @@ export default function SunTile({ now, sunrise, sunset, nextSunrise, daylight, t
   // Polar day or night, or data the model did not provide.
   if (sunrise == null || sunset == null) {
     return (
-      <Card title="Sol" icon={Sunrise} className="tile">
+      <Card title={t("day.sun")} icon={Sunrise} className="tile">
         <p className="tile-value">{MISSING}</p>
-        <p className="tile-text">Horários do sol indisponíveis para hoje.</p>
+        <p className="tile-text">{t("sun.unavailable")}</p>
       </Card>
     );
   }
@@ -32,7 +33,7 @@ export default function SunTile({ now, sunrise, sunset, nextSunrise, daylight, t
 
   return (
     <Card
-      title={beforeSunset ? "Pôr do sol" : "Nascer do sol"}
+      title={beforeSunset ? t("common.sunset") : t("sun.sunriseTitle")}
       icon={beforeSunset ? Sunset : Sunrise}
       className="tile"
     >
@@ -45,10 +46,10 @@ export default function SunTile({ now, sunrise, sunset, nextSunrise, daylight, t
       </svg>
       <p className="tile-text">
         {beforeSunset
-          ? `Nascer: ${formatTime(sunrise, timezone)}`
-          : `Pôr do sol: ${formatTime(sunset, timezone)}`}
+          ? t("sun.sunriseAt", { time: formatTime(sunrise, timezone) })
+          : t("sun.sunsetAt", { time: formatTime(sunset, timezone) })}
         <br />
-        Duração do dia: {daylight == null ? MISSING : formatDuration(daylight)}
+        {t("sun.daylight", { duration: daylight == null ? MISSING : formatDuration(daylight) })}
       </p>
     </Card>
   );

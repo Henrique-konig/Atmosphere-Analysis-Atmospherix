@@ -7,6 +7,7 @@ import {
   precipitationUnit,
   present,
 } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { Forecast } from "@/lib/types";
 import Card from "../Card";
 
@@ -20,24 +21,28 @@ export default function PrecipitationTile({ forecast }: { forecast: Forecast }) 
   );
 
   let text: string;
-  if (nextRainHour === 0)
-    text = `Chovendo agora. ${formatRainAmount(next24)} previstos nas próximas 24 h.`;
-  else if (nextRainHour > 0)
-    text = `Chuva prevista a partir das ${formatHour(hourly.time[nextRainHour], timezone)}${
-      formatWeekday(hourly.time[nextRainHour], timezone) !== formatWeekday(hourly.time[0], timezone)
-        ? ` de ${formatWeekday(hourly.time[nextRainHour], timezone)}`
-        : ""
-    }.`;
-  else if (nextRainDay > 0)
-    text = `Próxima chuva: ${formatWeekday(daily.time[nextRainDay], timezone)}, ${formatRainAmount(daily.precipitationSum[nextRainDay])}.`;
-  else text = "Nenhuma chuva prevista nos próximos dias.";
+  if (nextRainHour === 0) text = t("precip.now", { mm: formatRainAmount(next24) });
+  else if (nextRainHour > 0) {
+    const time = hourly.time[nextRainHour];
+    const day = formatWeekday(time, timezone);
+    const hour = formatHour(time, timezone);
+    text =
+      day !== formatWeekday(hourly.time[0], timezone)
+        ? t("precip.fromDay", { hour, day })
+        : t("precip.from", { hour });
+  } else if (nextRainDay > 0)
+    text = t("precip.next", {
+      day: formatWeekday(daily.time[nextRainDay], timezone),
+      mm: formatRainAmount(daily.precipitationSum[nextRainDay]),
+    });
+  else text = t("precip.none");
 
   return (
-    <Card title="Precipitação" icon={Droplets} className="tile">
+    <Card title={t("common.precipitation")} icon={Droplets} className="tile">
       <p className="tile-value">
         {formatRain(today)} {today != null && <small>{precipitationUnit()}</small>}
       </p>
-      <p className="tile-label">Hoje</p>
+      <p className="tile-label">{t("precip.today")}</p>
       <p className="tile-text">{text}</p>
     </Card>
   );
