@@ -1339,6 +1339,10 @@ a {
   flex-direction: column;
 }
 
+.day-tile.moon {
+  display: grid;
+}
+
 /* City sheet */
 .sheet {
   width: 100%;
