@@ -1,6 +1,6 @@
 "use client";
 
-import { Download, RefreshCw, Search } from "lucide-react";
+import { Download, LoaderCircle, Navigation, RefreshCw, Search, Star } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
@@ -15,6 +15,7 @@ import {
   storeHere,
   storeLastPlace,
   storeSavedPlaces,
+  toggleFavorite,
   type SavedPlace,
 } from "@/lib/storage";
 import CitySheet from "./CitySheet";
@@ -73,6 +74,16 @@ function requestCurrentPlace(
   );
 }
 
+/** True when the user already allowed location, so asking again shows no prompt. */
+async function locationGranted(): Promise<boolean> {
+  try {
+    const status = await navigator.permissions.query({ name: "geolocation" });
+    return status.state === "granted";
+  } catch {
+    return false;
+  }
+}
+
 export default function WeatherScreen() {
   // Rendered client-only, so storage can be read during the first render.
   const [place, setPlace] = useState<SavedPlace | null>(() => loadLastPlace());
@@ -94,9 +105,6 @@ export default function WeatherScreen() {
     if (next.current) {
       setHere(next);
       storeHere(next);
-    } else {
-      // Every city picked from the search stays in the list, like the iPhone Weather app.
-      setSaved((list) => (list.some((p) => samePlace(p, next)) ? list : [...list, next]));
     }
   }, []);
 
@@ -116,8 +124,27 @@ export default function WeatherScreen() {
   }, [choose]);
 
   // First visit: try the device location, falling back to a default city.
+  // Later visits: if location is already allowed, quietly refresh it so
+  // "Minha localização" follows the device without asking again.
   useEffect(() => {
-    if (place) return;
+    if (place) {
+      locationGranted().then((granted) => {
+        if (!granted) return;
+        requestCurrentPlace(
+          (p) => {
+            setHere(p);
+            storeHere(p);
+            setPlace((cur) => {
+              if (!cur?.current || samePlace(cur, p)) return cur;
+              storeLastPlace(p);
+              return p;
+            });
+          },
+          () => {},
+        );
+      });
+      return;
+    }
     requestCurrentPlace(
       (p) => {
         setLocating(false);
@@ -134,6 +161,8 @@ export default function WeatherScreen() {
   }, []);
 
   useEffect(() => storeSavedPlaces(saved), [saved]);
+
+  const favorite = Boolean(place && !place.current && saved.some((p) => samePlace(p, place)));
 
   const coords = place ? { lat: place.latitude, lon: place.longitude } : null;
   const { data, error, loading, refresh } = useForecast(coords);
@@ -155,8 +184,37 @@ export default function WeatherScreen() {
         <button
           type="button"
           className="round-button"
+          onClick={locate}
+          disabled={locating}
+          aria-label="Usar minha localização"
+          title="Usar minha localização"
+        >
+          {locating ? (
+            <LoaderCircle size={18} className="spin" aria-hidden />
+          ) : (
+            <Navigation size={18} aria-hidden />
+          )}
+        </button>
+        {place && !place.current && (
+          <button
+            type="button"
+            className={`round-button${favorite ? " on" : ""}`}
+            onClick={() => setSaved((list) => toggleFavorite(list, place))}
+            aria-pressed={favorite}
+            aria-label={
+              favorite ? `Remover ${place.name} dos favoritos` : `Favoritar ${place.name}`
+            }
+            title={favorite ? "Remover dos favoritos" : "Favoritar cidade"}
+          >
+            <Star size={18} fill={favorite ? "currentColor" : "none"} aria-hidden />
+          </button>
+        )}
+        <button
+          type="button"
+          className="round-button"
           onClick={() => setSheetOpen(true)}
           aria-label="Buscar cidade"
+          title="Buscar cidade"
         >
           <Search size={18} aria-hidden />
         </button>

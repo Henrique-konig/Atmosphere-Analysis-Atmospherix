@@ -121,6 +121,7 @@ a {
   z-index: 20;
   display: flex;
   justify-content: flex-end;
+  gap: 8px;
   max-width: 1080px;
   margin: 0 auto;
   pointer-events: none;
@@ -147,7 +148,6 @@ a {
   align-items: center;
   gap: 6px;
   height: 38px;
-  margin-right: 8px;
   padding: 0 14px;
   border: 0;
   border-radius: 19px;
@@ -158,6 +158,14 @@ a {
   font: inherit;
   font-size: 0.9rem;
   cursor: pointer;
+}
+
+.round-button.on {
+  color: #ffd54a;
+}
+
+.round-button:disabled {
+  opacity: 0.7;
 }
 
 .round-button.subtle {

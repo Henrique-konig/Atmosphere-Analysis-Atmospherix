@@ -130,7 +130,7 @@ export default function CitySheet(props: Props) {
               </button>
             )}
             {locateError && <p className="sheet-status error">{locateError}</p>}
-            <ul className="city-list" aria-label="Cidades salvas">
+            <ul className="city-list" aria-label="Cidades favoritas">
               {here && (
                 <CityCard
                   place={here}
@@ -158,8 +158,8 @@ export default function CitySheet(props: Props) {
             </ul>
             <p className="sheet-hint">
               {saved.length === 0
-                ? "As cidades que você buscar ficam salvas aqui automaticamente."
-                : "As cidades que você busca ficam salvas aqui. Toque em uma para ver a previsão."}
+                ? "Busque uma cidade e toque na estrela no topo da tela para salvá-la aqui."
+                : "Suas cidades favoritas ficam salvas neste aparelho. Toque em uma para ver a previsão."}
             </p>
           </>
         )}
@@ -214,7 +214,7 @@ function CityCard({ place, summary, now, active, onSelect, onRemove }: CardProps
           type="button"
           className="round-button subtle city-card-remove"
           onClick={onRemove}
-          aria-label={`Remover ${place.name}`}
+          aria-label={`Remover ${place.name} dos favoritos`}
         >
           <Trash2 size={15} aria-hidden />
         </button>
