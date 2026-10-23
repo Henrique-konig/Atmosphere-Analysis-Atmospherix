@@ -1,4 +1,5 @@
 import { formatTemp } from "./format";
+import { t } from "./i18n";
 
 export type IconKind =
   | "sun"
@@ -26,51 +27,55 @@ export interface Condition {
 /** WMO weather interpretation codes, as returned by Open-Meteo. */
 export function describeWeather(code: number | null, isDay = true): Condition {
   const sky = isDay ? "day" : "night";
-  if (code == null) return { label: "Indisponível", icon: "cloud", theme: `cloudy-${sky}` };
+  if (code == null)
+    return { label: t("common.unavailable"), icon: "cloud", theme: `cloudy-${sky}` };
   if (code === 0) {
     return {
-      label: isDay ? "Ensolarado" : "Céu limpo",
+      label: isDay ? t("weather.sunny") : t("weather.clear"),
       icon: isDay ? "sun" : "moon",
       theme: `clear-${sky}`,
     };
   }
   if (code === 1) {
     return {
-      label: "Predomínio de sol",
+      label: t("weather.mostlySunny"),
       icon: isDay ? "cloud-sun" : "cloud-moon",
       theme: `clear-${sky}`,
     };
   }
   if (code === 2) {
     return {
-      label: "Parcialmente nublado",
+      label: t("weather.partlyCloudy"),
       icon: isDay ? "cloud-sun" : "cloud-moon",
       theme: `cloudy-${sky}`,
     };
   }
-  if (code === 3) return { label: "Nublado", icon: "cloud", theme: `cloudy-${sky}` };
-  if (code === 45 || code === 48) return { label: "Nevoeiro", icon: "fog", theme: "fog" };
-  if (code >= 51 && code <= 57) return { label: "Garoa", icon: "drizzle", theme: "rain" };
-  if (code === 61 || code === 80) return { label: "Chuva fraca", icon: "drizzle", theme: "rain" };
-  if (code === 63 || code === 81) return { label: "Chuva", icon: "rain", theme: "rain" };
+  if (code === 3) return { label: t("weather.cloudy"), icon: "cloud", theme: `cloudy-${sky}` };
+  if (code === 45 || code === 48) return { label: t("weather.fog"), icon: "fog", theme: "fog" };
+  if (code >= 51 && code <= 57)
+    return { label: t("weather.drizzle"), icon: "drizzle", theme: "rain" };
+  if (code === 61 || code === 80)
+    return { label: t("weather.lightRain"), icon: "drizzle", theme: "rain" };
+  if (code === 63 || code === 81) return { label: t("weather.rain"), icon: "rain", theme: "rain" };
   if (code === 65 || code === 82)
-    return { label: "Chuva forte", icon: "heavy-rain", theme: "rain" };
-  if (code === 66 || code === 67) return { label: "Chuva congelante", icon: "rain", theme: "rain" };
+    return { label: t("weather.heavyRain"), icon: "heavy-rain", theme: "rain" };
+  if (code === 66 || code === 67)
+    return { label: t("weather.freezingRain"), icon: "rain", theme: "rain" };
   if ((code >= 71 && code <= 77) || code === 85 || code === 86) {
-    return { label: "Neve", icon: "snow", theme: "snow" };
+    return { label: t("weather.snow"), icon: "snow", theme: "snow" };
   }
-  if (code === 95) return { label: "Trovoadas", icon: "storm", theme: "storm" };
+  if (code === 95) return { label: t("weather.storm"), icon: "storm", theme: "storm" };
   if (code === 96 || code === 99)
-    return { label: "Trovoadas com granizo", icon: "storm", theme: "storm" };
-  return { label: "Indisponível", icon: "cloud", theme: `cloudy-${sky}` };
+    return { label: t("weather.hail"), icon: "storm", theme: "storm" };
+  return { label: t("common.unavailable"), icon: "cloud", theme: `cloudy-${sky}` };
 }
 
 export function uvLevel(uv: number): { label: string; advice: string } {
-  if (uv < 3) return { label: "Baixo", advice: "Sem necessidade de proteção." };
-  if (uv < 6) return { label: "Moderado", advice: "Use protetor solar ao sair." };
-  if (uv < 8) return { label: "Alto", advice: "Evite o sol entre 10h e 16h." };
-  if (uv < 11) return { label: "Muito alto", advice: "Proteção extra: chapéu, óculos e protetor." };
-  return { label: "Extremo", advice: "Evite se expor ao sol." };
+  if (uv < 3) return { label: t("uv.low"), advice: t("uv.lowAdvice") };
+  if (uv < 6) return { label: t("uv.moderate"), advice: t("uv.moderateAdvice") };
+  if (uv < 8) return { label: t("uv.high"), advice: t("uv.highAdvice") };
+  if (uv < 11) return { label: t("uv.veryHigh"), advice: t("uv.veryHighAdvice") };
+  return { label: t("uv.extreme"), advice: t("uv.extremeAdvice") };
 }
 
 export interface AqiLevel {
@@ -82,29 +87,28 @@ export interface AqiLevel {
 
 /** US EPA AQI categories. */
 export function aqiLevel(aqi: number): AqiLevel {
-  if (aqi <= 50)
-    return { label: "Boa", advice: "Ar limpo, bom para atividades ao ar livre.", tone: "good" };
+  if (aqi <= 50) return { label: t("air.good"), advice: t("air.goodAdvice"), tone: "good" };
   if (aqi <= 100)
     return {
-      label: "Moderada",
-      advice: "Pessoas muito sensíveis devem reduzir esforços longos ao ar livre.",
+      label: t("air.moderate"),
+      advice: t("air.moderateAdvice"),
       tone: "moderate",
     };
   if (aqi <= 150)
     return {
-      label: "Ruim para sensíveis",
-      advice: "Crianças, idosos e quem tem asma devem evitar esforço ao ar livre.",
+      label: t("air.sensitive"),
+      advice: t("air.sensitiveAdvice"),
       tone: "sensitive",
     };
   if (aqi <= 200)
-    return { label: "Ruim", advice: "Reduza atividades ao ar livre.", tone: "unhealthy" };
+    return { label: t("air.unhealthy"), advice: t("air.unhealthyAdvice"), tone: "unhealthy" };
   if (aqi <= 300)
     return {
-      label: "Muito ruim",
-      advice: "Evite atividades ao ar livre e mantenha as janelas fechadas.",
+      label: t("air.veryUnhealthy"),
+      advice: t("air.veryUnhealthyAdvice"),
       tone: "very-unhealthy",
     };
-  return { label: "Perigosa", advice: "Fique em ambientes fechados.", tone: "hazardous" };
+  return { label: t("air.hazardous"), advice: t("air.hazardousAdvice"), tone: "hazardous" };
 }
 
 /** UV colour class suffix, matching the UV bar. */
@@ -117,27 +121,24 @@ export function uvTone(uv: number): "low" | "moderate" | "high" | "very-high" | 
 }
 
 export function visibilityLabel(meters: number): string {
-  if (meters >= 20_000) return "Visibilidade excelente.";
-  if (meters >= 10_000) return "Boa visibilidade.";
-  if (meters >= 4_000) return "Visibilidade moderada.";
-  if (meters >= 1_000) return "Visibilidade reduzida.";
-  return "Neblina: visibilidade muito baixa.";
+  if (meters >= 20_000) return t("visibility.excellent");
+  if (meters >= 10_000) return t("visibility.good");
+  if (meters >= 4_000) return t("visibility.moderate");
+  if (meters >= 1_000) return t("visibility.reduced");
+  return t("visibility.fog");
 }
 
 export function feelsLikeLabel(actual: number, feels: number, humidity: number | null): string {
   const diff = feels - actual;
-  if (diff >= 2)
-    return humidity != null && humidity >= 60
-      ? "A umidade faz parecer mais quente."
-      : "Parece mais quente que a temperatura real.";
-  if (diff <= -2) return "O vento faz parecer mais frio.";
-  return "Parecida com a temperatura real.";
+  if (diff >= 2) return humidity != null && humidity >= 60 ? t("feels.humid") : t("feels.warmer");
+  if (diff <= -2) return t("feels.colder");
+  return t("feels.same");
 }
 
 export function humidityLabel(dewPoint: number): string {
-  if (dewPoint >= 21) return `Abafado. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
-  if (dewPoint >= 16) return `Um pouco úmido. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
-  return `Agradável. O ponto de orvalho é de ${formatTemp(dewPoint)}.`;
+  if (dewPoint >= 21) return t("humidity.muggy", { dew: formatTemp(dewPoint) });
+  if (dewPoint >= 16) return t("humidity.humid", { dew: formatTemp(dewPoint) });
+  return t("humidity.pleasant", { dew: formatTemp(dewPoint) });
 }
 
 /** Compares the pressure now with a few hours ahead. */

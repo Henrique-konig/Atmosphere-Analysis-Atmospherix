@@ -1,6 +1,8 @@
+import { getLocale } from "./i18n";
+
 /**
  * City name for a coordinate, from BigDataCloud's free client-side endpoint (no key).
- * Returns null when the lookup fails; callers fall back to "Minha localização".
+ * Returns null when the lookup fails; callers fall back to "My location".
  */
 export async function reverseGeocode(
   latitude: number,
@@ -11,7 +13,7 @@ export async function reverseGeocode(
     const params = new URLSearchParams({
       latitude: String(latitude),
       longitude: String(longitude),
-      localityLanguage: "pt",
+      localityLanguage: getLocale(),
     });
     const res = await fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?${params}`, {
       signal,

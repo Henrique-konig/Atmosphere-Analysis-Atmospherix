@@ -2,9 +2,10 @@ import { Clock, Sunrise, Sunset } from "lucide-react";
 import { aqiAt } from "@/lib/airquality";
 import { describeWeather } from "@/lib/conditions";
 import { formatHour, formatSpeed, formatTemp, formatTime, present } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { AirQuality, Forecast } from "@/lib/types";
 import Card from "./Card";
-import HourDetails from "./HourDetails";
+import HourDetails, { describeHour } from "./HourDetails";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
 
@@ -41,20 +42,52 @@ export default function HourlyCard({
   const gusts = present(hourly.windGusts.slice(0, HOURS));
   const summary =
     gusts.length > 0
-      ? `${condition.label} agora. Rajadas de vento de até ${formatSpeed(Math.max(...gusts))} nas próximas horas.`
-      : `${condition.label} agora.`;
+      ? t("hourly.summaryGusts", {
+          condition: condition.label,
+          speed: formatSpeed(Math.max(...gusts)),
+        })
+      : t("hourly.summary", { condition: condition.label });
 
   return (
-    <Card title="Previsão por hora" icon={Clock} className="hourly">
+    <Card title={t("hourly.title")} icon={Clock} className="hourly">
       <p className="card-summary">{summary}</p>
-      <ScrollStrip className="hourly-strip" label="Próximas 24 horas">
-        {items.map((item) =>
-          item.kind === "hour" ? (
+      <ScrollStrip className="hourly-strip" label={t("hourly.next24")}>
+        {items.map((item) => {
+          if (item.kind === "sun") {
+            const label = item.rise ? t("common.sunrise") : t("common.sunset");
+            return (
+              <li key={`s${item.time}`} className="hourly-sun">
+                <span className="sr-only">{`${formatTime(item.time, timezone)}, ${label}`}</span>
+                <span className="hourly-time" aria-hidden>
+                  {formatTime(item.time, timezone)}
+                </span>
+                <span className="hourly-icon" aria-hidden>
+                  {item.rise ? (
+                    <Sunrise size={26} className="weather-icon icon-sun" aria-hidden />
+                  ) : (
+                    <Sunset size={26} className="weather-icon icon-sun" aria-hidden />
+                  )}
+                </span>
+                <span className="hourly-temp" aria-hidden>
+                  {label}
+                </span>
+              </li>
+            );
+          }
+          const aqi = airQuality ? aqiAt(airQuality, item.time) : undefined;
+          return (
             <li key={`h${item.time}`}>
-              <span className="hourly-time">
-                {item.index === 0 ? "Agora" : formatHour(item.time, timezone)}
+              <span className="sr-only">
+                {describeHour(hourly, item.index, timezone, {
+                  now: item.index === 0,
+                  temperature: item.index === 0 ? current.temperature : undefined,
+                  aqi,
+                })}
               </span>
-              <span className="hourly-icon">
+              <span className="hourly-time" aria-hidden>
+                {item.index === 0 ? t("common.now") : formatHour(item.time, timezone)}
+              </span>
+              <span className="hourly-icon" aria-hidden>
                 <WeatherIcon
                   kind={
                     describeWeather(hourly.weatherCode[item.index], hourly.isDay[item.index]).icon
@@ -67,31 +100,15 @@ export default function HourlyCard({
                   </span>
                 )}
               </span>
-              <span className="hourly-temp">
+              <span className="hourly-temp" aria-hidden>
                 {formatTemp(
                   item.index === 0 ? current.temperature : hourly.temperature[item.index],
                 )}
               </span>
-              <HourDetails
-                hourly={hourly}
-                index={item.index}
-                aqi={airQuality ? aqiAt(airQuality, item.time) : undefined}
-              />
+              <HourDetails hourly={hourly} index={item.index} aqi={aqi} />
             </li>
-          ) : (
-            <li key={`s${item.time}`} className="hourly-sun">
-              <span className="hourly-time">{formatTime(item.time, timezone)}</span>
-              <span className="hourly-icon">
-                {item.rise ? (
-                  <Sunrise size={26} className="weather-icon icon-sun" aria-hidden />
-                ) : (
-                  <Sunset size={26} className="weather-icon icon-sun" aria-hidden />
-                )}
-              </span>
-              <span className="hourly-temp">{item.rise ? "Nascer" : "Pôr do sol"}</span>
-            </li>
-          ),
-        )}
+          );
+        })}
       </ScrollStrip>
     </Card>
   );

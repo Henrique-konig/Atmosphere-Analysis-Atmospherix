@@ -1,6 +1,7 @@
 import { Leaf } from "lucide-react";
 import { aqiLevel } from "@/lib/conditions";
 import { formatNumber, MISSING } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { AirQuality } from "@/lib/types";
 import Card from "../Card";
 
@@ -14,30 +15,28 @@ export default function AirQualityTile({ air }: { air: AirQuality | null }) {
   const aqi = c?.aqi ?? null;
   const level = aqi == null ? null : aqiLevel(aqi);
   return (
-    <Card title="Qualidade do ar" icon={Leaf} className="tile tile-wide air">
+    <Card title={t("air.title")} icon={Leaf} className="tile tile-wide air">
       <div className="air-main">
         <p className="tile-value">{formatNumber(aqi)}</p>
-        <p className="tile-label">{level ? level.label : "Indisponível"}</p>
+        <p className="tile-label">{level ? level.label : t("common.unavailable")}</p>
         <div
           className="aqi-bar"
           role="img"
           aria-label={
             aqi == null
-              ? "Qualidade do ar indisponível"
-              : `Índice de qualidade do ar ${Math.round(aqi)}, ${level?.label.toLowerCase()}`
+              ? t("air.unavailable")
+              : t("air.index", { aqi: Math.round(aqi), level: level?.label.toLowerCase() ?? "" })
           }
         >
           {aqi != null && (
             <span className="uv-dot" style={{ left: `${Math.min(100, (aqi / BAR_MAX) * 100)}%` }} />
           )}
         </div>
-        <p className="tile-text">
-          {level ? level.advice : "Sem dados de qualidade do ar para este local agora."}
-        </p>
+        <p className="tile-text">{level ? level.advice : t("air.noData")}</p>
       </div>
       <dl className="wind-rows air-rows">
         <div>
-          <dt>PM2,5</dt>
+          <dt>{t("air.pm25")}</dt>
           <dd>{microgram(c?.pm25 ?? null)}</dd>
         </div>
         <div>
@@ -45,7 +44,7 @@ export default function AirQualityTile({ air }: { air: AirQuality | null }) {
           <dd>{microgram(c?.pm10 ?? null)}</dd>
         </div>
         <div>
-          <dt>Ozônio</dt>
+          <dt>{t("air.ozone")}</dt>
           <dd>{microgram(c?.ozone ?? null)}</dd>
         </div>
         <div>

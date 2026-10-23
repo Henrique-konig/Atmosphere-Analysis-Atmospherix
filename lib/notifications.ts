@@ -1,5 +1,6 @@
 import { describeWeather } from "./conditions";
 import { formatHour, formatRainAmount } from "./format";
+import { t as tr } from "./i18n";
 import { detectRisks } from "./risks";
 import type { Forecast } from "./types";
 
@@ -35,9 +36,9 @@ function rainyHour(forecast: Forecast, i: number): boolean {
 
 function untilText(seconds: number): string {
   const minutes = Math.max(5, Math.round(seconds / 60 / 5) * 5);
-  if (minutes < 50) return `em ~${minutes} min`;
+  if (minutes < 50) return tr("notify.inMinutes", { minutes });
   const hours = Math.round(minutes / 60);
-  return `em ~${hours}h`;
+  return tr("notify.inHours", { hours });
 }
 
 /**
@@ -62,16 +63,20 @@ export function rainSoon(
     if (t <= now) return null;
 
     const label = describeWeather(hourly.weatherCode[i], hourly.isDay[i]).label;
-    const kind = isRainCode(hourly.weatherCode[i]) ? label : "Chuva";
+    const kind = isRainCode(hourly.weatherCode[i]) ? label : tr("day.rain");
     const details = [
       hourly.precipitationProbability[i] != null &&
-        `${hourly.precipitationProbability[i]}% de chance`,
+        tr("charts.chance", { prob: hourly.precipitationProbability[i]! }),
       hourly.precipitation[i] != null && formatRainAmount(hourly.precipitation[i]),
     ].filter(Boolean);
     return {
       tag: `rain:${place.key}:${t}`,
-      title: `Vai chover ${untilText(t - now)} · ${place.name}`,
-      body: `${kind} por volta das ${formatHour(t, timezone)}${details.length ? ` (${details.join(", ")})` : ""}. Leve o guarda-chuva.`,
+      title: `${tr("notify.rainTitle", { when: untilText(t - now) })} · ${place.name}`,
+      body: tr("notify.rainBody", {
+        kind,
+        hour: formatHour(t, timezone),
+        details: details.length ? ` (${details.join(", ")})` : "",
+      }),
     };
   }
   return null;
@@ -89,7 +94,7 @@ export function severeNotices(
       title: `${risk.title} · ${place.name}`,
       body: risk.allDay
         ? risk.detail
-        : `A partir das ${formatHour(risk.time, forecast.timezone)}. ${risk.detail}`,
+        : `${tr("notify.from", { hour: formatHour(risk.time, forecast.timezone) })} ${risk.detail}`,
     }));
 }
 

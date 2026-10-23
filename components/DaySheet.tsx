@@ -13,7 +13,7 @@ import {
   Wind,
   X,
 } from "lucide-react";
-import { useEffect, useRef } from "react";
+import { useEffect, useId, useRef } from "react";
 import { aqiAt, aqiRange } from "@/lib/airquality";
 import { aqiLevel, describeWeather, uvLevel } from "@/lib/conditions";
 import { dayDetails, daySummary } from "@/lib/day";
@@ -32,11 +32,12 @@ import {
   formatWeekday,
   MISSING,
 } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { AirQuality, Forecast } from "@/lib/types";
 import { convertTemp, precipitationUnit, speedUnit } from "@/lib/units";
 import Card from "./Card";
 import DayChart from "./DayChart";
-import HourDetails from "./HourDetails";
+import HourDetails, { describeHour } from "./HourDetails";
 import MoonDisc from "./MoonDisc";
 import ScrollStrip from "./ScrollStrip";
 import WeatherIcon from "./WeatherIcon";
@@ -64,6 +65,7 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
   const dialogRef = useRef<HTMLDialogElement>(null);
   const stripRef = useRef<HTMLOListElement>(null);
   const touch = useRef<{ x: number; y: number } | null>(null);
+  const titleId = useId();
   const open = day !== null;
   const { daily, dayHours, timezone, current } = forecast;
   const count = daily.time.length;
@@ -90,7 +92,7 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
     <dialog
       ref={dialogRef}
       className={`sheet day-sheet theme-${describeWeather(d?.weatherCode ?? null).theme}`}
-      aria-label="Previsão do dia"
+      aria-labelledby={titleId}
       onClose={onClose}
       onClick={(e) => e.target === dialogRef.current && onClose()}
       onKeyDown={(e) => {
@@ -117,15 +119,20 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
       {d && day !== null && (
         <div className="sheet-body">
           <header className="sheet-header">
-            <h2>
-              <CalendarDays size={20} aria-hidden /> Previsão do dia
+            <h2 id={titleId}>
+              <CalendarDays size={20} aria-hidden /> {t("day.title")}
             </h2>
-            <button type="button" className="round-button" onClick={onClose} aria-label="Fechar">
+            <button
+              type="button"
+              className="round-button"
+              onClick={onClose}
+              aria-label={t("common.close")}
+            >
               <X size={18} aria-hidden />
             </button>
           </header>
 
-          <ol ref={stripRef} className="day-strip" aria-label="Escolher dia">
+          <ol ref={stripRef} className="day-strip" aria-label={t("day.chooseDay")}>
             {daily.time.map((time, i) => (
               <li key={time}>
                 <button
@@ -134,8 +141,9 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
                   className={i === day ? "selected" : ""}
                   aria-current={i === day ? "date" : undefined}
                   onClick={() => onSelectDay(i)}
+                  aria-label={formatLongDate(time, timezone)}
                 >
-                  <span>{i === 0 ? "Hoje" : formatWeekday(time, timezone)}</span>
+                  <span>{i === 0 ? t("common.today") : formatWeekday(time, timezone)}</span>
                   <strong>{formatDayOfMonth(time, timezone)}</strong>
                 </button>
               </li>
@@ -149,14 +157,15 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
               <div>
                 <p className="day-condition">{describeWeather(d.weatherCode).label}</p>
                 <p className="day-range">
-                  Máx.: {formatTemp(d.max)} · Mín.: {formatTemp(d.min)}
+                  {t("hero.max", { temp: formatTemp(d.max) })} ·{" "}
+                  {t("hero.min", { temp: formatTemp(d.min) })}
                 </p>
               </div>
             </div>
             <p className="day-summary">{daySummary(d, timezone)}</p>
           </section>
 
-          <Card title="Temperatura ao longo do dia" icon={Thermometer}>
+          <Card title={t("day.tempChart")} icon={Thermometer}>
             <DayChart
               hours={dayHours}
               indices={d.hours}
@@ -167,13 +176,13 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
             />
           </Card>
 
-          <Card title="Hora a hora" icon={Clock} className="hourly">
+          <Card title={t("day.hourByHour")} icon={Clock} className="hourly">
             {d.hours.length === 0 ? (
-              <p className="card-note">Sem previsão por hora para este dia.</p>
+              <p className="card-note">{t("day.noHourly")}</p>
             ) : (
               <ScrollStrip
                 className="hourly-strip"
-                label="Previsão hora a hora"
+                label={t("day.hourByHourLabel")}
                 startSelector="li:not(.past)"
                 resetKey={day}
               >
@@ -181,22 +190,26 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
                   const time = dayHours.time[i];
                   const prob = dayHours.precipitationProbability[i];
                   const past = isToday && time + 3600 <= current.time;
+                  const aqi = airQuality ? aqiAt(airQuality, time) : undefined;
                   return (
                     <li key={time} className={past ? "past" : undefined}>
-                      <span className="hourly-time">{formatHour(time, timezone)}</span>
-                      <span className="hourly-icon">
+                      <span className="sr-only">
+                        {describeHour(dayHours, i, timezone, { aqi })}
+                      </span>
+                      <span className="hourly-time" aria-hidden>
+                        {formatHour(time, timezone)}
+                      </span>
+                      <span className="hourly-icon" aria-hidden>
                         <WeatherIcon
                           kind={describeWeather(dayHours.weatherCode[i], dayHours.isDay[i]).icon}
                           size={26}
                         />
                         {prob != null && prob >= 20 && <span className="hourly-prob">{prob}%</span>}
                       </span>
-                      <span className="hourly-temp">{formatTemp(dayHours.temperature[i])}</span>
-                      <HourDetails
-                        hourly={dayHours}
-                        index={i}
-                        aqi={airQuality ? aqiAt(airQuality, time) : undefined}
-                      />
+                      <span className="hourly-temp" aria-hidden>
+                        {formatTemp(dayHours.temperature[i])}
+                      </span>
+                      <HourDetails hourly={dayHours} index={i} aqi={aqi} />
                     </li>
                   );
                 })}
@@ -205,100 +218,100 @@ export default function DaySheet({ forecast, airQuality, day, onSelectDay, onClo
           </Card>
 
           <div className="day-tiles">
-            <Card title="Chuva" icon={Umbrella} className="day-tile">
+            <Card title={t("day.rain")} icon={Umbrella} className="day-tile">
               <p className="tile-value">
                 {formatRain(d.precipitation)}{" "}
                 {d.precipitation != null && <small>{precipitationUnit()}</small>}
               </p>
               <p className="tile-text">
                 {d.precipitationProbability == null
-                  ? "Chance de chuva indisponível."
-                  : `Chance de chuva de ${d.precipitationProbability}%.`}
+                  ? t("day.rainChanceUnavailable")
+                  : t("day.rainChance", { prob: d.precipitationProbability })}
               </p>
             </Card>
-            <Card title="Sensação" icon={Thermometer} className="day-tile">
+            <Card title={t("day.feelsLike")} icon={Thermometer} className="day-tile">
               <p className="tile-value">
                 {d.feelsLike ? tempFromTo(d.feelsLike.min, d.feelsLike.max) : MISSING}
               </p>
-              <p className="tile-text">Sensação térmica mínima e máxima.</p>
+              <p className="tile-text">{t("day.feelsLikeText")}</p>
             </Card>
-            <Card title="Vento" icon={Wind} className="day-tile">
+            <Card title={t("common.wind")} icon={Wind} className="day-tile">
               <p className="tile-value">
                 {formatSpeedNumber(d.windMax)} {d.windMax != null && <small>{speedUnit()}</small>}
               </p>
               <p className="tile-text">
-                {d.gustsMax != null && `Rajadas de até ${formatSpeed(d.gustsMax)}. `}
-                {d.windDirection != null && `Vindo de ${compassPoint(d.windDirection)}.`}
+                {d.gustsMax != null && t("day.gustsUpTo", { speed: formatSpeed(d.gustsMax) })}
+                {d.windDirection != null &&
+                  t("day.windFrom", { direction: compassPoint(d.windDirection) })}
               </p>
             </Card>
-            <Card title="Índice UV" icon={Sun} className="day-tile">
+            <Card title={t("uv.title")} icon={Sun} className="day-tile">
               <p className="tile-value">{formatNumber(d.uvMax)}</p>
               <p className="tile-text">
                 {d.uvMax == null
-                  ? "Índice máximo do dia."
-                  : `Máximo ${uvLevel(d.uvMax).label.toLowerCase()}.`}
+                  ? t("day.uvMaxOfDay")
+                  : t("day.uvMax", { level: uvLevel(d.uvMax).label.toLowerCase() })}
               </p>
             </Card>
-            <Card title="Umidade" icon={Droplet} className="day-tile">
+            <Card title={t("humidity.title")} icon={Droplet} className="day-tile">
               <p className="tile-value">
                 {d.humidity ? fromTo(d.humidity.min, d.humidity.max, "%") : MISSING}
               </p>
               <p className="tile-text">
                 {d.dewPoint
-                  ? `Ponto de orvalho de ${tempFromTo(d.dewPoint.min, d.dewPoint.max)}.`
-                  : "Umidade relativa ao longo do dia."}
+                  ? t("day.dewPoint", { range: tempFromTo(d.dewPoint.min, d.dewPoint.max) })
+                  : t("day.humidityText")}
               </p>
             </Card>
-            <Card title="Pressão" icon={Gauge} className="day-tile">
+            <Card title={t("pressure.title")} icon={Gauge} className="day-tile">
               <p className="tile-value">
                 {d.pressure ? Math.round((d.pressure.min + d.pressure.max) / 2) : MISSING}{" "}
                 {d.pressure && <small>hPa</small>}
               </p>
               <p className="tile-text">
                 {d.pressure
-                  ? `Entre ${Math.round(d.pressure.min)} e ${Math.round(d.pressure.max)} hPa.`
-                  : "Pressão média do dia."}
+                  ? t("day.pressureBetween", {
+                      min: Math.round(d.pressure.min),
+                      max: Math.round(d.pressure.max),
+                    })
+                  : t("day.pressureAverage")}
               </p>
             </Card>
-            <Card title="Qualidade do ar" icon={Leaf} className="day-tile tile-wide">
+            <Card title={t("air.title")} icon={Leaf} className="day-tile tile-wide">
               <dl className="wind-rows">
                 <div>
-                  <dt>Pior momento</dt>
+                  <dt>{t("air.worst")}</dt>
                   <dd>{air ? `${Math.round(air.max)} · ${aqiLevel(air.max).label}` : MISSING}</dd>
                 </div>
                 <div>
-                  <dt>Melhor momento</dt>
+                  <dt>{t("air.best")}</dt>
                   <dd>{air ? `${Math.round(air.min)} · ${aqiLevel(air.min).label}` : MISSING}</dd>
                 </div>
               </dl>
-              <p className="tile-text">
-                {air
-                  ? "Índice de qualidade do ar (escala americana), pelas previsões por hora."
-                  : "A previsão de qualidade do ar cobre só os próximos 5 dias."}
-              </p>
+              <p className="tile-text">{air ? t("air.dayNote") : t("air.dayUnavailable")}</p>
             </Card>
-            <Card title="Sol e Lua" icon={Sunrise} className="day-tile tile-wide moon">
+            <Card title={t("day.sunMoon")} icon={Sunrise} className="day-tile tile-wide moon">
               <div className="moon-body">
                 <MoonDisc phase={d.moon.phase} latitude={forecast.latitude} label={d.moon.name} />
                 <dl className="wind-rows">
                   <div>
-                    <dt>Nascer do sol</dt>
+                    <dt>{t("sun.sunriseTitle")}</dt>
                     <dd>{d.sunrise == null ? MISSING : formatTime(d.sunrise, timezone)}</dd>
                   </div>
                   <div>
-                    <dt>Pôr do sol</dt>
+                    <dt>{t("common.sunset")}</dt>
                     <dd>{d.sunset == null ? MISSING : formatTime(d.sunset, timezone)}</dd>
                   </div>
                   <div>
-                    <dt>Duração do dia</dt>
+                    <dt>{t("common.daylight")}</dt>
                     <dd>{d.daylight == null ? MISSING : formatDuration(d.daylight)}</dd>
                   </div>
                   <div>
-                    <dt>Lua</dt>
+                    <dt>{t("moon.title")}</dt>
                     <dd>{d.moon.name}</dd>
                   </div>
                   <div>
-                    <dt>Iluminação</dt>
+                    <dt>{t("moon.illumination")}</dt>
                     <dd>{Math.round(d.moon.illumination * 100)}%</dd>
                   </div>
                 </dl>

@@ -1,5 +1,6 @@
 import { Wind } from "lucide-react";
 import { compassPoint, formatSpeed, formatSpeedNumber, MISSING, speedUnit } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import Card from "../Card";
 
 interface Props {
@@ -11,18 +12,18 @@ interface Props {
 export default function WindTile({ speed, gusts, direction }: Props) {
   const ticks = Array.from({ length: 36 }, (_, i) => i * 10);
   return (
-    <Card title="Vento" icon={Wind} className="tile tile-wide wind">
+    <Card title={t("common.wind")} icon={Wind} className="tile tile-wide wind">
       <dl className="wind-rows">
         <div>
-          <dt>Vento</dt>
+          <dt>{t("common.wind")}</dt>
           <dd>{formatSpeed(speed)}</dd>
         </div>
         <div>
-          <dt>Rajadas</dt>
+          <dt>{t("common.gusts")}</dt>
           <dd>{formatSpeed(gusts)}</dd>
         </div>
         <div>
-          <dt>Direção</dt>
+          <dt>{t("wind.direction")}</dt>
           <dd>
             {direction == null ? MISSING : `${Math.round(direction)}° ${compassPoint(direction)}`}
           </dd>
@@ -34,8 +35,8 @@ export default function WindTile({ speed, gusts, direction }: Props) {
         role="img"
         aria-label={
           direction == null
-            ? "Direção do vento indisponível"
-            : `Vento de ${compassPoint(direction)}`
+            ? t("wind.directionUnavailable")
+            : t("common.windFrom", { direction: compassPoint(direction) })
         }
       >
         {ticks.map((deg) => (
@@ -53,13 +54,13 @@ export default function WindTile({ speed, gusts, direction }: Props) {
           N
         </text>
         <text x="95" y="63" className="compass-label">
-          L
+          {compassPoint(90)}
         </text>
         <text x="60" y="99" className="compass-label">
           S
         </text>
         <text x="25" y="63" className="compass-label">
-          O
+          {compassPoint(270)}
         </text>
         {/* The arrow points where the wind blows to (opposite of where it comes from). */}
         {direction != null && (

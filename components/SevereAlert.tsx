@@ -2,6 +2,7 @@ import { CloudLightning, Snowflake, ThermometerSun, TriangleAlert, Wind } from "
 import type { LucideIcon } from "lucide-react";
 import { riskWhen } from "@/lib/risks";
 import type { Risk } from "@/lib/risks";
+import { t } from "@/lib/i18n";
 
 interface Props {
   risks: Risk[];
@@ -20,7 +21,7 @@ const ICONS: Record<string, LucideIcon> = {
 export default function SevereAlert({ risks, timezone, now }: Props) {
   if (risks.length === 0) return null;
   return (
-    <section className="severe" aria-label="Avisos de clima severo">
+    <section className="severe" aria-label={t("severe.label")}>
       <ul>
         {risks.map((risk) => {
           const Icon = ICONS[risk.id] ?? TriangleAlert;
@@ -34,7 +35,7 @@ export default function SevereAlert({ risks, timezone, now }: Props) {
               </span>
               <div className="severe-body">
                 <div className="severe-head">
-                  <span className="severe-level">{risk.level}</span>
+                  <span className="severe-level">{t(`risks.level.${risk.level}`)}</span>
                   <span className="severe-when">{riskWhen(risk, now, timezone)}</span>
                 </div>
                 <strong className="severe-title">{risk.title}</strong>
@@ -44,10 +45,7 @@ export default function SevereAlert({ risks, timezone, now }: Props) {
           );
         })}
       </ul>
-      <p className="severe-note">
-        Estimado a partir da previsão do Open-Meteo. Para alertas oficiais, consulte a Defesa Civil
-        e o INMET.
-      </p>
+      <p className="severe-note">{t("severe.note")}</p>
     </section>
   );
 }

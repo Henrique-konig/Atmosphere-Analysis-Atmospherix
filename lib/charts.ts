@@ -1,3 +1,4 @@
+import { t } from "./i18n";
 import type { Forecast } from "./types";
 import {
   convertPrecipitation,
@@ -50,13 +51,13 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
       series: hours
         ? [
             {
-              label: "Temperatura",
+              label: t("settings.temperature"),
               values: inUnit(h.temperature, convertTemp),
               kind: "line",
               tone: "tone-temp",
             },
             {
-              label: "Sensação",
+              label: t("feels.title"),
               values: inUnit(h.apparentTemperature, convertTemp),
               kind: "line",
               tone: "tone-feels",
@@ -65,13 +66,13 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
           ]
         : [
             {
-              label: "Máxima",
+              label: t("charts.maxLabel"),
               values: inUnit(d.temperatureMax, convertTemp),
               kind: "line",
               tone: "tone-max",
             },
             {
-              label: "Mínima",
+              label: t("charts.minLabel"),
               values: inUnit(d.temperatureMin, convertTemp),
               kind: "line",
               tone: "tone-min",
@@ -87,13 +88,13 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
       fromZero: true,
       series: [
         {
-          label: hours ? "Chuva por hora" : "Chuva no dia",
+          label: hours ? t("charts.rainHour") : t("charts.rainDay"),
           values: inUnit(hours ? h.precipitation : d.precipitationSum, convertPrecipitation),
           kind: "bar",
           tone: "tone-rain",
         },
         {
-          label: "Chance de chuva",
+          label: t("charts.rainChance"),
           values: hours ? h.precipitationProbability : d.precipitationProbabilityMax,
           kind: "line",
           tone: "tone-chance",
@@ -111,13 +112,13 @@ export function chartData(forecast: Forecast, metric: Metric, period: Period): C
     directions: hours ? h.windDirection : d.windDirectionDominant,
     series: [
       {
-        label: hours ? "Vento" : "Vento máximo",
+        label: hours ? t("common.wind") : t("charts.windMax"),
         values: inUnit(hours ? h.windSpeed : d.windSpeedMax, convertSpeed),
         kind: "line",
         tone: "tone-wind",
       },
       {
-        label: hours ? "Rajadas" : "Rajadas máximas",
+        label: hours ? t("common.gusts") : t("charts.gustsMax"),
         values: inUnit(hours ? h.windGusts : d.windGustsMax, convertSpeed),
         kind: "line",
         tone: "tone-gust",

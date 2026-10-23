@@ -1,5 +1,6 @@
 import { temperatureColor } from "@/lib/colors";
 import { formatHour, formatTemp, present } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import type { HourlyForecast } from "@/lib/types";
 
 interface Props {
@@ -29,7 +30,7 @@ export default function DayChart({ hours, indices, start, end, timezone, now }: 
   });
   const temps = present(points.map((p) => p.temp));
   if (temps.length < 2) {
-    return <p className="card-note">Sem previsão por hora para este dia.</p>;
+    return <p className="card-note">{t("day.noHourly")}</p>;
   }
 
   const lo = Math.min(...temps);
@@ -47,6 +48,9 @@ export default function DayChart({ hours, indices, start, end, timezone, now }: 
 
   return (
     <div className="day-chart">
+      <p className="sr-only">
+        {t("day.chartSummary", { min: formatTemp(lo), max: formatTemp(hi) })}
+      </p>
       <div className="day-chart-plot">
         <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" aria-hidden>
           <defs>
@@ -105,7 +109,7 @@ export default function DayChart({ hours, indices, start, end, timezone, now }: 
         ))}
       </div>
       <p className="day-chart-legend">
-        <span className="day-chart-swatch" aria-hidden /> Chance de chuva por hora
+        <span className="day-chart-swatch" aria-hidden /> {t("day.chartLegend")}
       </p>
     </div>
   );

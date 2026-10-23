@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowRight, ArrowUp, Gauge } from "lucide-react";
 import { pressureTrend } from "@/lib/conditions";
 import { formatNumber } from "@/lib/format";
+import { t } from "@/lib/i18n";
 import Card from "../Card";
 
 const MIN = 970;
@@ -21,14 +22,15 @@ export default function PressureTile({ now, later }: { now: number | null; later
   const end = point(1, 44);
   const needle = fraction == null ? null : point(fraction, 44);
   const TrendIcon = trend === "subindo" ? ArrowUp : trend === "caindo" ? ArrowDown : ArrowRight;
+  const trendText = trend ? t(`pressure.${trend}`) : null;
 
   return (
-    <Card title="Pressão" icon={Gauge} className="tile">
+    <Card title={t("pressure.title")} icon={Gauge} className="tile">
       <svg
         viewBox="0 0 120 108"
         className="gauge"
         role="img"
-        aria-label={`Pressão ${formatNumber(now)} hPa${trend ? `, ${trend}` : ""}`}
+        aria-label={`${t("pressure.gauge", { value: formatNumber(now) })}${trendText ? `, ${trendText}` : ""}`}
       >
         <path
           d={`M ${start.x} ${start.y} A 44 44 0 1 1 ${end.x} ${end.y}`}
@@ -45,7 +47,7 @@ export default function PressureTile({ now, later }: { now: number | null; later
           hPa
         </text>
       </svg>
-      {trend && <p className="tile-text">Pressão {trend} nas próximas horas.</p>}
+      {trendText && <p className="tile-text">{t("pressure.trendText", { trend: trendText })}</p>}
     </Card>
   );
 }

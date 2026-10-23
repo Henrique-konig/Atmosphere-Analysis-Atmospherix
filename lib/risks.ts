@@ -6,6 +6,7 @@ import {
   formatWeekday,
   present,
 } from "./format";
+import { t } from "./i18n";
 import type { Forecast } from "./types";
 
 export type RiskLevel = "atenção" | "alerta";
@@ -46,10 +47,14 @@ export function detectRisks(forecast: Forecast): Risk[] {
     risks.push({
       id: "storm",
       level: hail || windy ? "alerta" : "atenção",
-      title: hail ? "Tempestade com granizo" : windy ? "Tempestade com ventania" : "Tempestades",
+      title: hail
+        ? t("risks.hail.title")
+        : windy
+          ? t("risks.stormWind.title")
+          : t("risks.storm.title"),
       detail: windy
-        ? `Trovoadas com rajadas de até ${formatSpeed(stormGust)}. Fique em local fechado e longe de árvores.`
-        : "Trovoadas previstas. Evite áreas abertas e fique longe de árvores.",
+        ? t("risks.stormWind.detail", { speed: formatSpeed(stormGust) })
+        : t("risks.storm.detail"),
       time: hourly.time[storm],
     });
   }
@@ -63,11 +68,11 @@ export function detectRisks(forecast: Forecast): Risk[] {
     risks.push({
       id: "rain",
       level: severe ? "alerta" : "atenção",
-      title: "Chuva forte",
+      title: t("risks.rain.title"),
       detail:
         heavyHour >= 0
-          ? `Até ${formatRainAmount(maxRainHour)} em uma hora. Risco de alagamentos.`
-          : `Acumulado de ${formatRainAmount(daily.precipitationSum[heavyDay] ?? 0)} no dia. Risco de alagamentos.`,
+          ? t("risks.rain.hour", { mm: formatRainAmount(maxRainHour) })
+          : t("risks.rain.day", { mm: formatRainAmount(daily.precipitationSum[heavyDay] ?? 0) }),
       time: heavyHour >= 0 ? hourly.time[heavyHour] : daily.time[heavyDay],
       allDay: heavyHour < 0,
     });
@@ -79,8 +84,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
     risks.push({
       id: "wind",
       level: maxGust >= 80 ? "alerta" : "atenção",
-      title: maxGust >= 80 ? "Rajadas muito fortes" : "Rajadas fortes",
-      detail: `Rajadas de até ${formatSpeed(maxGust)}. Cuidado com objetos soltos e árvores.`,
+      title: maxGust >= 80 ? t("risks.windSevere.title") : t("risks.wind.title"),
+      detail: t("risks.wind.detail", { speed: formatSpeed(maxGust) }),
       time: hourly.time[gust],
     });
   }
@@ -94,14 +99,14 @@ export function detectRisks(forecast: Forecast): Risk[] {
     const feels = Math.max(-Infinity, ...present(hourly.apparentTemperature));
     const extreme = max >= 38 || feels >= 45;
     const parts = [
-      max >= 35 && `Máxima de ${formatTemp(max)}`,
-      feels >= 40 && feels > max && `sensação térmica de até ${formatTemp(feels)}`,
+      max >= 35 && t("risks.heat.max", { temp: formatTemp(max) }),
+      feels >= 40 && feels > max && t("risks.heat.feels", { temp: formatTemp(feels) }),
     ].filter(Boolean);
     risks.push({
       id: "heat",
       level: extreme ? "alerta" : "atenção",
-      title: extreme ? "Calor extremo" : "Calor intenso",
-      detail: `${sentence(parts)}. Beba água e evite o sol no meio do dia.`,
+      title: extreme ? t("risks.heatExtreme.title") : t("risks.heat.title"),
+      detail: `${sentence(parts)}. ${t("risks.heat.advice")}`,
       time: hotDay >= 0 ? daily.time[hotDay] : hourly.time[hotFeel],
       allDay: hotDay >= 0,
     });
@@ -114,14 +119,19 @@ export function detectRisks(forecast: Forecast): Risk[] {
     const feels = Math.min(Infinity, ...present(hourly.apparentTemperature));
     const extreme = min <= 0 || feels <= -5;
     const parts = [
-      min <= 3 && `Mínima de ${formatTemp(min)}`,
-      feels <= 0 && feels < min && `sensação térmica de ${formatTemp(feels)}`,
+      min <= 3 && t("risks.cold.min", { temp: formatTemp(min) }),
+      feels <= 0 && feels < min && t("risks.cold.feels", { temp: formatTemp(feels) }),
     ].filter(Boolean);
     risks.push({
       id: "cold",
       level: extreme ? "alerta" : "atenção",
-      title: min <= 1 ? "Frio intenso e geada" : extreme ? "Frio extremo" : "Frio intenso",
-      detail: `${sentence(parts)}. Proteja plantas, animais e pessoas vulneráveis.`,
+      title:
+        min <= 1
+          ? t("risks.frost.title")
+          : extreme
+            ? t("risks.coldExtreme.title")
+            : t("risks.cold.title"),
+      detail: `${sentence(parts)}. ${t("risks.cold.advice")}`,
       time: coldDay >= 0 ? daily.time[coldDay] : hourly.time[coldFeel],
       allDay: coldDay >= 0,
     });
@@ -133,8 +143,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
     risks.push({
       id: "uv",
       level: max >= 11 ? "alerta" : "atenção",
-      title: "Índice UV muito alto",
-      detail: `UV até ${Math.round(max)}. Use protetor e evite o sol entre 10h e 16h.`,
+      title: t("risks.uv.title"),
+      detail: t("risks.uv.detail", { uv: Math.round(max) }),
       time: daily.time[uv],
       allDay: true,
     });
@@ -145,8 +155,8 @@ export function detectRisks(forecast: Forecast): Risk[] {
     risks.push({
       id: "fog",
       level: "atenção",
-      title: "Neblina",
-      detail: "Visibilidade abaixo de 1 km. Dirija com cuidado e farol baixo.",
+      title: t("risks.fog.title"),
+      detail: t("risks.fog.detail"),
       time: hourly.time[fog],
     });
   }
@@ -156,9 +166,9 @@ export function detectRisks(forecast: Forecast): Risk[] {
   return risks.sort((a, b) => order[a.level] - order[b.level]);
 }
 
-/** Joins phrases as "A e b", capitalising the first one. */
+/** Joins phrases as "A e b" ("A and b"…), capitalising the first one. */
 function sentence(parts: (string | false)[]): string {
-  const text = parts.join(" e ");
+  const text = parts.join(` ${t("risks.and")} `);
   return text.charAt(0).toUpperCase() + text.slice(1);
 }
 
@@ -173,13 +183,14 @@ export function isSevereWeather(risk: Risk): boolean {
 export function riskWhen(risk: Risk, now: number, timezone: string): string {
   const { time } = risk;
   if (risk.allDay) {
-    if (formatWeekday(time, timezone) === formatWeekday(now, timezone)) return "hoje";
-    if (formatWeekday(time, timezone) === formatWeekday(now + 86_400, timezone)) return "amanhã";
+    if (formatWeekday(time, timezone) === formatWeekday(now, timezone)) return t("risks.today");
+    if (formatWeekday(time, timezone) === formatWeekday(now + 86_400, timezone))
+      return t("risks.tomorrow");
     return formatWeekday(time, timezone);
   }
-  if (time <= now + 1800) return "agora";
+  if (time <= now + 1800) return t("risks.now");
   const sameDay = formatWeekday(time, timezone) === formatWeekday(now, timezone);
   return sameDay
-    ? `a partir das ${formatHour(time, timezone)}`
+    ? t("risks.fromHour", { hour: formatHour(time, timezone) })
     : `${formatWeekday(time, timezone)}, ${formatHour(time, timezone)}`;
 }

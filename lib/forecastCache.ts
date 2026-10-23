@@ -1,3 +1,4 @@
+import { localeTag, t } from "./i18n";
 import type { ForecastResponse } from "./types";
 
 /** The last forecast loaded for a place, kept so the app still shows something offline. */
@@ -55,7 +56,7 @@ const dayFormat = (timeZone?: string) =>
 
 /** "14:32" today, "ontem, 14:32", or "19/10, 14:32", in the device's time zone. */
 export function formatSavedAt(savedAt: number, now: number, timeZone?: string): string {
-  const time = new Intl.DateTimeFormat("pt-BR", {
+  const time = new Intl.DateTimeFormat(localeTag(), {
     timeZone,
     hour: "2-digit",
     minute: "2-digit",
@@ -63,8 +64,8 @@ export function formatSavedAt(savedAt: number, now: number, timeZone?: string): 
   }).format(savedAt);
   const day = dayFormat(timeZone);
   if (day.format(savedAt) === day.format(now)) return time;
-  if (day.format(savedAt) === day.format(now - 86_400_000)) return `ontem, ${time}`;
-  const date = new Intl.DateTimeFormat("pt-BR", {
+  if (day.format(savedAt) === day.format(now - 86_400_000)) return t("offline.yesterday", { time });
+  const date = new Intl.DateTimeFormat(localeTag(), {
     timeZone,
     day: "2-digit",
     month: "2-digit",

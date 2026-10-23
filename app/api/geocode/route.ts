@@ -1,5 +1,6 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { searchPlaces } from "@/lib/geocoding";
+import { isLocale } from "@/lib/i18n";
 import { OpenMeteoError } from "@/lib/openmeteo";
 
 export async function GET(req: NextRequest) {
@@ -9,7 +10,8 @@ export async function GET(req: NextRequest) {
   }
 
   try {
-    const places = await searchPlaces(query);
+    const lang = req.nextUrl.searchParams.get("lang");
+    const places = await searchPlaces(query, 6, lang && isLocale(lang) ? lang : "pt");
     return NextResponse.json(places, {
       headers: { "Cache-Control": "public, s-maxage=86400, stale-while-revalidate=604800" },
     });

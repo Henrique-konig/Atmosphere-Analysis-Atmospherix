@@ -1,3 +1,4 @@
+import { getLocale, localeTag, t, type MessageKey } from "./i18n";
 import {
   convertDistance,
   convertPrecipitation,
@@ -11,27 +12,44 @@ import {
 
 const cache = new Map<string, Intl.DateTimeFormat>();
 
-/** Intl formatters are costly to create; reuse one per time zone and pattern. */
+/** Intl formatters are costly to create; reuse one per language, time zone and pattern. */
 function formatter(timeZone: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
-  const key = timeZone + JSON.stringify(options);
+  const tag = localeTag();
+  const key = tag + timeZone + JSON.stringify(options);
   let f = cache.get(key);
   if (!f) {
-    f = new Intl.DateTimeFormat("pt-BR", { timeZone, ...options });
+    f = new Intl.DateTimeFormat(tag, { timeZone, ...options });
     cache.set(key, f);
   }
   return f;
 }
 
-/** "14h" in the location's time zone. */
+/** "14h" in the location's time zone ("14 h" in Spanish, "2 PM" in English). */
 export function formatHour(unix: number, timeZone: string): string {
-  return `${formatter(timeZone, { hour: "2-digit", hourCycle: "h23" }).format(unix * 1000)}h`;
+  if (getLocale() === "en")
+    return formatter(timeZone, { hour: "numeric", hour12: true }).format(unix * 1000);
+  const hour = formatter(timeZone, { hour: "2-digit", hourCycle: "h23" }).format(unix * 1000);
+  return getLocale() === "es" ? `${hour} h` : `${hour}h`;
 }
 
-/** "06:12" in the location's time zone. */
+/** Local hour of a timestamp, 0–23, whatever the language's clock format. */
+export function localHour(unix: number, timeZone: string): number {
+  return Number(formatter(timeZone, { hour: "2-digit", hourCycle: "h23" }).format(unix * 1000));
+}
+
+/** Decimal number with the language's decimal mark: "0,5" ("0.5" in English). */
+export const formatDecimal = (v: number, digits: number) => {
+  const text = v.toFixed(digits);
+  return getLocale() === "en" ? text : text.replace(".", ",");
+};
+
+/** "06:12" in the location's time zone ("6:12 AM" in English). */
 export function formatTime(unix: number, timeZone: string): string {
-  return formatter(timeZone, { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(
-    unix * 1000,
-  );
+  const options: Intl.DateTimeFormatOptions =
+    getLocale() === "en"
+      ? { hour: "numeric", minute: "2-digit", hour12: true }
+      : { hour: "2-digit", minute: "2-digit", hourCycle: "h23" };
+  return formatter(timeZone, options).format(unix * 1000);
 }
 
 /** "Seg", "Ter"… */
@@ -60,9 +78,18 @@ export function formatDuration(seconds: number): string {
   return `${h}h ${String(m).padStart(2, "0")}min`;
 }
 
-const COMPASS = ["N", "NE", "L", "SE", "S", "SO", "O", "NO"];
+const COMPASS: MessageKey[] = [
+  "compass.N",
+  "compass.NE",
+  "compass.E",
+  "compass.SE",
+  "compass.S",
+  "compass.SW",
+  "compass.W",
+  "compass.NW",
+];
 export function compassPoint(deg: number): string {
-  return COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8];
+  return t(COMPASS[Math.round((((deg % 360) + 360) % 360) / 45) % 8]);
 }
 
 /** Shown in place of a value the model did not provide. */
@@ -100,7 +127,7 @@ export const formatNumber = (v: number | null, digits = 0) =>
 /** The values of a series that the model actually provided. */
 export const present = (values: (number | null)[]) => values.filter((v): v is number => v != null);
 
-/** Rain (mm in), number only, pt-BR style: "0", "0,4", "12" (or "0,02", "1,3" in inches). */
+/** Rain (mm in), number only, with the language's decimal mark: "0", "0,4", "12" ("0.4" in English). */
 export function formatRain(mm: number | null): string {
   return mm == null ? MISSING : formatRainValue(convertPrecipitation(mm));
 }
@@ -110,7 +137,8 @@ export function formatRainValue(v: number): string {
   const inches = getUnits().precipitation === "in";
   if (v < (inches ? 0.005 : 0.05)) return "0";
   const decimals = inches ? (v < 1 ? 2 : 1) : v < 10 ? 1 : 0;
-  return v.toFixed(decimals).replace(".", ",");
+  const text = v.toFixed(decimals);
+  return getLocale() === "en" ? text : text.replace(".", ",");
 }
 
 /** Rain (mm in) with its unit: "0,4 mm", "0,02 in". */

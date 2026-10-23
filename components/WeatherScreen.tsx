@@ -16,6 +16,7 @@ import { useForecast } from "@/hooks/useForecast";
 import { useInstallPrompt } from "@/hooks/useInstallPrompt";
 import { useWeatherNotifications } from "@/hooks/useWeatherNotifications";
 import { describeWeather } from "@/lib/conditions";
+import { t } from "@/lib/i18n";
 import { reverseGeocode } from "@/lib/reverseGeocode";
 import { detectRisks, isSevereWeather } from "@/lib/risks";
 import {
@@ -40,6 +41,7 @@ import DailyCard from "./DailyCard";
 import DaySheet from "./DaySheet";
 import Hero from "./Hero";
 import HourlyCard from "./HourlyCard";
+import { useLocale } from "./LocaleProvider";
 import NotificationSheet from "./NotificationSheet";
 import OfflineBanner from "./OfflineBanner";
 import RainMap from "./RainMap";
@@ -66,9 +68,7 @@ const DEFAULT_PLACE: SavedPlace = {
 };
 
 function geolocationError(err: GeolocationPositionError): string {
-  return err.code === err.PERMISSION_DENIED
-    ? "Permissão de localização negada. Ative-a nas configurações do navegador."
-    : "Não foi possível obter sua localização.";
+  return err.code === err.PERMISSION_DENIED ? t("geo.denied") : t("geo.failed");
 }
 
 /** Asks the browser for the position and names it via reverse geocoding. */
@@ -77,7 +77,7 @@ function requestCurrentPlace(
   onError: (message: string) => void,
 ) {
   if (!("geolocation" in navigator)) {
-    onError("Seu navegador não permite obter a localização.");
+    onError(t("geo.unsupported"));
     return;
   }
   navigator.geolocation.getCurrentPosition(
@@ -85,7 +85,7 @@ function requestCurrentPlace(
       const { latitude, longitude } = pos.coords;
       const named = await reverseGeocode(latitude, longitude);
       onPlace({
-        name: named?.name ?? "Minha localização",
+        name: named?.name ?? t("app.myLocation"),
         detail: named?.detail,
         latitude,
         longitude,
@@ -128,6 +128,8 @@ export default function WeatherScreen() {
   const [themePref, setThemePref] = useState<ThemePreference>(() => loadTheme());
   const [notifyOpen, setNotifyOpen] = useState(false);
   const { canInstall, install } = useInstallPrompt();
+  // Subscribing to the language re-renders the whole screen, texts included, when it changes.
+  const { locale } = useLocale();
 
   const changeUnits = useCallback((next: Units) => {
     setUnits(next);
@@ -229,11 +231,11 @@ export default function WeatherScreen() {
     notifications.permission === "granted" &&
     (notifications.settings.rain || notifications.settings.severe);
 
-  // Risk texts include values, so they are rebuilt when the units change.
+  // Risk texts include values and words, so they are rebuilt when units or language change.
   const risks = useMemo(
     () => (forecast ? detectRisks(forecast) : []),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [forecast, units],
+    [forecast, units, locale],
   );
   const severe = risks.filter(isSevereWeather);
   const otherRisks = risks.filter((r) => !isSevereWeather(r));
@@ -246,15 +248,15 @@ export default function WeatherScreen() {
       <div className="topbar">
         {canInstall && (
           <button type="button" className="install-button" onClick={install}>
-            <Download size={16} aria-hidden /> Instalar app
+            <Download size={16} aria-hidden /> {t("app.install")}
           </button>
         )}
         <button
           type="button"
           className={`round-button notify-button${notifying ? " on" : ""}`}
           onClick={() => setNotifyOpen(true)}
-          aria-label={notifying ? "Avisos ativados" : "Avisos"}
-          title="Avisos"
+          aria-label={notifying ? t("notify.on") : t("notify.title")}
+          title={t("notify.title")}
         >
           {notifying ? <BellRing size={18} aria-hidden /> : <Bell size={18} aria-hidden />}
         </button>
@@ -263,8 +265,8 @@ export default function WeatherScreen() {
           className="round-button"
           onClick={locate}
           disabled={locating}
-          aria-label="Usar minha localização"
-          title="Usar minha localização"
+          aria-label={t("cities.useLocation")}
+          title={t("cities.useLocation")}
         >
           {locating ? (
             <LoaderCircle size={18} className="spin" aria-hidden />
@@ -279,9 +281,11 @@ export default function WeatherScreen() {
             onClick={() => setSaved((list) => toggleFavorite(list, place))}
             aria-pressed={favorite}
             aria-label={
-              favorite ? `Remover ${place.name} dos favoritos` : `Favoritar ${place.name}`
+              favorite
+                ? t("favorites.remove", { name: place.name })
+                : t("favorites.add", { name: place.name })
             }
-            title={favorite ? "Remover dos favoritos" : "Favoritar cidade"}
+            title={favorite ? t("favorites.removeTitle") : t("favorites.addTitle")}
           >
             <Star size={18} fill={favorite ? "currentColor" : "none"} aria-hidden />
           </button>
@@ -290,8 +294,8 @@ export default function WeatherScreen() {
           type="button"
           className="round-button"
           onClick={() => setSettingsOpen(true)}
-          aria-label="Ajustes: unidades e tema"
-          title="Ajustes"
+          aria-label={t("settings.label")}
+          title={t("settings.title")}
         >
           <Settings2 size={18} aria-hidden />
         </button>
@@ -299,8 +303,8 @@ export default function WeatherScreen() {
           type="button"
           className="round-button"
           onClick={() => setSheetOpen(true)}
-          aria-label="Buscar cidade"
-          title="Buscar cidade"
+          aria-label={t("app.searchCity")}
+          title={t("app.searchCity")}
         >
           <Search size={18} aria-hidden />
         </button>
@@ -308,9 +312,9 @@ export default function WeatherScreen() {
 
       {!place || (!forecast && !error) ? (
         <div className="placeholder" role="status">
-          <p className="hero-city">{place?.name ?? "Localizando…"}</p>
+          <p className="hero-city">{place?.name ?? t("app.locating")}</p>
           <p className="hero-condition">
-            {locating ? "Obtendo sua localização…" : "Carregando previsão…"}
+            {locating ? t("app.gettingLocation") : t("app.loadingForecast")}
           </p>
         </div>
       ) : !forecast ? (
@@ -318,7 +322,7 @@ export default function WeatherScreen() {
           <p className="hero-city">{place.name}</p>
           <p className="hero-condition">{error}</p>
           <button type="button" className="locate-button" onClick={refresh}>
-            <RefreshCw size={16} aria-hidden /> Tentar de novo
+            <RefreshCw size={16} aria-hidden /> {t("app.retry")}
           </button>
         </div>
       ) : (
@@ -327,7 +331,7 @@ export default function WeatherScreen() {
             <OfflineBanner savedAt={savedAt} offline={offline} onRetry={refresh} />
           )}
           <Hero place={place} forecast={forecast} onOpenCities={() => setSheetOpen(true)} />
-          <div className={`layout${loading ? " refreshing" : ""}`}>
+          <div className={`layout${loading ? " refreshing" : ""}`} aria-busy={loading}>
             <SevereAlert risks={severe} timezone={forecast.timezone} now={forecast.current.time} />
             <RiskBanner
               risks={otherRisks}
@@ -386,9 +390,11 @@ export default function WeatherScreen() {
             </div>
           </div>
           <footer className="footer">
-            Dados: <a href="https://open-meteo.com/">Open-Meteo</a> (qualidade do ar: CAMS) · Mapa:
-            Esri, OpenStreetMap ·{" "}
-            <a href="https://github.com/Henrique-konig/Atmosphere-Analysis-Atmospherix">Código</a>
+            {t("app.footerData")}: <a href="https://open-meteo.com/">Open-Meteo</a> (
+            {t("app.footerAir")}: CAMS) · {t("app.footerMap")}: Esri, OpenStreetMap ·{" "}
+            <a href="https://github.com/Henrique-konig/Atmosphere-Analysis-Atmospherix">
+              {t("app.footerCode")}
+            </a>
           </footer>
           <DaySheet
             forecast={forecast}

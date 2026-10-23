@@ -9,6 +9,7 @@ import {
   storeSentNotices,
 } from "@/lib/storage";
 import type { Forecast } from "@/lib/types";
+import { t } from "@/lib/i18n";
 
 /** "unsupported": no Notification API, e.g. Safari on iPhone outside an installed app. */
 export type NotifyPermission = NotificationPermission | "unsupported";
@@ -73,7 +74,7 @@ export function useWeatherNotifications(
     await show({
       tag: "test",
       title: "Atmospherix",
-      body: "Os avisos estão ativos. Você será avisado assim, com o app aberto.",
+      body: t("notify.testBody"),
     });
   }, []);
 
