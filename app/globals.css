@@ -615,6 +615,9 @@ a {
 
 /* Hourly strip */
 .hourly-strip {
+  /* Containing block for the hidden hour descriptions, so they scroll with the strip
+     instead of widening the page. */
+  position: relative;
   display: flex;
   gap: 4px;
   overflow-x: auto;
